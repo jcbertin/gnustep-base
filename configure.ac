@@ -3193,6 +3193,7 @@ AC_SUBST(HAVE_ICU)
 # See DEPENDENCIES POLICY at the start of this file.
 #--------------------------------------------------------------------
 HAVE_LIBDISPATCH=0
+HAVE_LIBDISPATCH_COMPAT=0
 AC_ARG_ENABLE(libdispatch,
   [  --disable-libdispatch		Disable dispatching blocks via libdispatch],
   enable_libdispatch=no,
@@ -3216,17 +3217,16 @@ if test $enable_libdispatch = yes; then
 	LIBS="$saveLIBS -ldispatch";
 	AC_MSG_RESULT(yes);
 	HAVE_LIBDISPATCH=1;
+        AC_CHECK_LIB(dispatch, _dispatch_main_queue_callback_4GS, HAVE_LIBDISPATCH_COMPAT=1,)
       else
 	LIBS="$saveLIBS";
 	AC_MSG_RESULT(no);
       fi
     fi
-  else
-  HAVE_LIBDISPATCH=0;
-  # just ignore libdispatch if it's not there
   fi
 fi
 AC_SUBST(HAVE_LIBDISPATCH)
+AC_SUBST(HAVE_LIBDISPATCH_COMPAT)
 
 
 #--------------------------------------------------------------------

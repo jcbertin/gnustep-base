@@ -543,5 +543,18 @@ GSPrivateIsCollectable(const void *ptr) GS_ATTRIB_PRIVATE;
 NSZone*
 GSAtomicMallocZone (void);
 
+#if GS_HAVE_LIBDISPATCH_COMPAT
+void
+GSPrivateDispatchInitialize(void) GS_ATTRIB_PRIVATE;
+
+/* These functions are used by libdispatch to initialize
+ * NSAutoreleasePool for its worker threads.
+ */
+void*
+GSPrivateAutoreleasePoolAllocate(void) GS_ATTRIB_PRIVATE;
+void
+GSPrivateAutoreleasePoolDeallocate(void* param) GS_ATTRIB_PRIVATE;
+#endif /* GS_HAVE_LIBDISPATCH_COMPAT */
+
 #endif /* _GSPrivate_h_ */
 
