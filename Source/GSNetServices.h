@@ -79,7 +79,7 @@ NSString* GSNetServiceDotTerminatedNSStringFromString(const char* string);
   NSRecursiveLock *_lock;
   // Ivars for this class:
   NSMutableDictionary *_info;
-  NSLock *_infoLock;
+  NSRecursiveLock *_infoLock;
   NSUInteger _infoSeq;
   GSNetServiceState _serviceState;
   int _ifIndex;
