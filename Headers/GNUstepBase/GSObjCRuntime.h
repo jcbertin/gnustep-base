@@ -468,6 +468,14 @@ GSObjCDirectSubclassesOfClass(Class cls);
 GS_EXPORT void
 GSClassSwizzle(id instance, Class newClass);
 
+#if GS_WITH_GC || __OBJC_GC__
+/** Function to prepare threads for garbage allocator.
+ * This is used by libdispatch to get its worker threads ready for GC.
+ */
+GS_EXPORT void
+GSRegisterThreadWithGC(void);
+#endif
+
 #if GS_API_VERSION(GS_API_ANY,011500)
 
 GS_EXPORT const char *

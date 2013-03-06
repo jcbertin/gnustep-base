@@ -437,6 +437,10 @@ setThreadForCurrentThread(NSThread *t)
 {
   [[NSGarbageCollector defaultCollector] disableCollectorForPointer: t];
   pthread_setspecific(thread_object_key, t);
+#if GS_WITH_GC || __OBJC_GC__
+  GSRegisterThreadWithGC();
+#endif
+  // FIXME: should we *REALLY* call this?
   gnustep_base_thread_callback();
 }
 
@@ -485,8 +489,7 @@ unregisterActiveThread(NSThread *thread)
     {
       t = [self new];
       t->_active = YES;
-      [[NSGarbageCollector defaultCollector] disableCollectorForPointer: t];
-      pthread_setspecific(thread_object_key, t);
+      setThreadForCurrentThread(t);
       GS_CONSUMED(t);
       return YES;
     }
@@ -771,29 +774,6 @@ static void *nsthreadLauncher(void* thread)
 {
     NSThread *t = (NSThread*)thread;
     setThreadForCurrentThread(t);
-#if __OBJC_GC__
-	objc_registerThreadWithCollector();
-#endif
-#if	GS_WITH_GC && defined(HAVE_GC_REGISTER_MY_THREAD)
-  {
-    struct GC_stack_base	base;
-
-    if (GC_get_stack_base(&base) == GC_SUCCESS)
-      {
-	int	result;
-
-	result = GC_register_my_thread(&base);
-	if (result != GC_SUCCESS && result != GC_DUPLICATE)
-	  {
-	    fprintf(stderr, "Argh ... no thread support in garbage collection library\n");
-	  }
-      }
-    else
-      {
-	fprintf(stderr, "Unable to determine stack base to register new thread for garbage collection\n");
-      }
-  }
-#endif
 
   /*
    * Let observers know a new thread is starting.
