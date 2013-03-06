@@ -3721,7 +3721,12 @@ isEqualFunc(const void *item1, const void *item2,
       offset = [dest length];
       [dest setLength: offset + sizeof(unichar)*len];
       buffer = [dest mutableBytes] + offset;
+      // Fix alignment warning. This warning can safely
+      // be ignored since offset is always aligned with unichar.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wcast-align"
       [string getCharacters: (unichar*)buffer];
+#pragma GCC diagnostic pop
 
       // Always store in big-endian, so if machine is little-endian,
       // perform byte-swapping.
