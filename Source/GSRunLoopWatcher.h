@@ -81,4 +81,15 @@
 - (BOOL) runLoopShouldBlock: (BOOL*)trigger;
 @end
 
+#if GS_HAVE_LIBDISPATCH_COMPAT
+@interface GSDispatchWatcher : GSRunLoopWatcher
+{
+  @private
+  BOOL _receivedEventLastTime;
+  BOOL _mainQueueSafe;
+}
++ (GSDispatchWatcher*)sharedInstance;
+@end
+#endif /* GS_HAVE_LIBDISPATCH_COMPAT */
+
 #endif /* __GSRunLoopWatcher_h_GNUSTEP_BASE_INCLUDE */

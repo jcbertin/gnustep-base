@@ -1151,6 +1151,9 @@ static id gs_weak_load(id obj)
       GSPrivateDispatchInitialize();
 #endif
 
+      /* Make sure that main thread is correctly set up. */
+      GSCurrentThread();
+
       /* Now that we have a workign autorelease system and working string
        * classes we are able to set up notifications.
        */

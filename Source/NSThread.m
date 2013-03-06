@@ -87,9 +87,12 @@
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 #  include <pthread_np.h>
-#  define IS_MAIN_PTHREAD (pthread_main_np() == 1)
+#  define IS_MAIN_PTHREAD pthread_main_np()
 #else
-#  define IS_MAIN_PTHREAD (1)
+#  define MAIN_PTHREAD_NEEDS_LOAD 1
+#  define IS_MAIN_PTHREAD pthread_equal(_main_pthread, pthread_self())
+/* clang is whining if it's static so make it global internal... */
+GS_ATTRIB_PRIVATE pthread_t _main_pthread;
 #endif
 
 
@@ -341,6 +344,12 @@ GSCurrentThread(void)
   return thr;
 }
 
+inline BOOL
+GSIsMainThread(void)
+{
+  return (GSCurrentThread() == defaultThread ? YES : NO);
+}
+
 NSMutableDictionary*
 GSDictionaryForThread(NSThread *t)
 {
@@ -539,6 +548,13 @@ unregisterActiveThread(NSThread *thread)
 	}
     }
 }
+
+#if MAIN_PTHREAD_NEEDS_LOAD
++ (void) load
+{
+  _main_pthread = pthread_self();
+}
+#endif
 
 /*
  * Class initialization
@@ -1169,14 +1185,9 @@ GSRunLoopInfoForThread(NSThread *aThread)
 		       waitUntilDone: (BOOL)aFlag
 			       modes: (NSArray*)anArray
 {
-  /* It's possible that this method could be called before the NSThread
-   * class is initialised, so we check and make sure it's initiailised
-   * if necessary.
+  /* NSThread class is initialised in NSObject+initialize,
+   * so we don't need to check defaultThread initialization.
    */
-  if (defaultThread == nil)
-    {
-      [NSThread currentThread];
-    }
   [self performSelector: aSelector
                onThread: defaultThread
              withObject: anObject

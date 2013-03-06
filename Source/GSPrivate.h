@@ -35,8 +35,10 @@
 
 #if ( (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) ) && HAVE_VISIBILITY_ATTRIBUTE )
 #define GS_ATTRIB_PRIVATE __attribute__ ((visibility("internal")))
+#define GS_ATTRIB_HIDDEN __attribute__ ((visibility("hidden")))
 #else
 #define GS_ATTRIB_PRIVATE
+#define GS_ATTRIB_HIDDEN
 #endif
 
 /* Absolute Gregorian date for NSDate reference date Jan 01 2001
@@ -549,11 +551,14 @@ GSPrivateDispatchInitialize(void) GS_ATTRIB_PRIVATE;
 
 /* These functions are used by libdispatch to initialize
  * NSAutoreleasePool for its worker threads.
+ * We must *REALLY* define them as hidden instead of internal
+ * because they are callbacks given to libdispatch which is
+ * an external module.
  */
 void*
-GSPrivateAutoreleasePoolAllocate(void) GS_ATTRIB_PRIVATE;
+GSPrivateAutoreleasePoolAllocate(void) GS_ATTRIB_HIDDEN;
 void
-GSPrivateAutoreleasePoolDeallocate(void* param) GS_ATTRIB_PRIVATE;
+GSPrivateAutoreleasePoolDeallocate(void* param) GS_ATTRIB_HIDDEN;
 #endif /* GS_HAVE_LIBDISPATCH_COMPAT */
 
 #endif /* _GSPrivate_h_ */

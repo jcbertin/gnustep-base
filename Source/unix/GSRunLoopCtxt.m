@@ -27,6 +27,10 @@
 #include <poll.h>
 #endif
 
+#if GS_HAVE_LIBDISPATCH_COMPAT
+#import "GNUstepBase/NSThread+GNUstepBase.h"
+#endif
+
 #define	FDCOUNT	1024
 
 #if	GS_WITH_GC == 0
@@ -200,6 +204,15 @@ static const NSMapTableValueCallBacks WatcherMapValueCallBacks =
 				      WatcherMapValueCallBacks, 0);
       _wfdMap = NSCreateMapTable (NSIntegerMapKeyCallBacks,
 				      WatcherMapValueCallBacks, 0);
+
+#if GS_HAVE_LIBDISPATCH_COMPAT
+      if (GSIsMainThread())
+	{
+          /* FIXME: We should add dispatch watcher only for common modes. */
+          id w = [GSDispatchWatcher sharedInstance];
+          GSIArrayAddItem(watchers, (GSIArrayItem)w);
+        }
+#endif
     }
   return self;
 }
