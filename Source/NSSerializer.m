@@ -389,7 +389,7 @@ static BOOL	shouldBeCompact = NO;
   _NSSerializerInfo	info;
   NSMutableData		*d;
 
-  NSAssert(propertyList != nil, NSInvalidArgumentException);
+  NSAssert1(propertyList != nil, @"%@", NSInvalidArgumentException);
   d = [NSMutableData dataWithCapacity: 1024];
   initSerializerInfo(&info, d, shouldBeCompact);
   serializeToInfo(propertyList, &info);
@@ -406,8 +406,8 @@ static BOOL	shouldBeCompact = NO;
 {
   _NSSerializerInfo	info;
 
-  NSAssert(propertyList != nil, NSInvalidArgumentException);
-  NSAssert(d != nil, NSInvalidArgumentException);
+  NSAssert1(propertyList != nil, @"%@", NSInvalidArgumentException);
+  NSAssert1(d != nil, @"%@", NSInvalidArgumentException);
   initSerializerInfo(&info, d, shouldBeCompact);
   serializeToInfo(propertyList, &info);
   endSerializerInfo(&info);
@@ -422,8 +422,8 @@ static BOOL	shouldBeCompact = NO;
 {
   _NSSerializerInfo	info;
 
-  NSAssert(propertyList != nil, NSInvalidArgumentException);
-  NSAssert(d != nil, NSInvalidArgumentException);
+  NSAssert1(propertyList != nil, @"%@", NSInvalidArgumentException);
+  NSAssert1(d != nil, @"%@", NSInvalidArgumentException);
   initSerializerInfo(&info, d, flag);
   serializeToInfo(propertyList, &info);
   endSerializerInfo(&info);
@@ -863,7 +863,7 @@ deserializeFromInfo(_NSDeserializerInfo* info)
     {
       return nil;
     }
-  NSAssert(cursor != 0, NSInvalidArgumentException);
+  NSAssert1(cursor != 0, @"%@", NSInvalidArgumentException);
   if (initDeserializerInfo(&info, data, cursor, flag) == YES)
     {
       o = deserializeFromInfo(&info);
@@ -931,7 +931,7 @@ deserializeFromInfo(_NSDeserializerInfo* info)
     {
       return nil;
     }
-  NSAssert(cursor != 0, NSInvalidArgumentException);
+  NSAssert1(cursor != 0, @"%@", NSInvalidArgumentException);
   if (length > [data length] - *cursor)
     {
       _NSDeserializerInfo   info;

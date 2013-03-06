@@ -312,7 +312,7 @@ NSCreateHashTableWithZone(
   if (concreteClass == Nil)
     {
       [NSConcreteHashTable class];	// Force +initialize
-      NSCAssert(concreteClass != Nil, NSInternalInconsistencyException);
+      NSCAssert1(concreteClass != Nil, @"%@", NSInternalInconsistencyException);
     }
   table = (GSIMapTable)[concreteClass allocWithZone: zone];
 

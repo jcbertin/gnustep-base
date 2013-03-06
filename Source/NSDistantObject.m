@@ -185,7 +185,7 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
 */
 
   decoder_connection = [(NSPortCoder*)aCoder connection];
-  NSAssert(decoder_connection, NSInternalInconsistencyException);
+  NSAssert1(decoder_connection, @"%@", NSInternalInconsistencyException);
 
   /* First get the tag, so we know what values need to be decoded. */
   [aCoder decodeValueOfObjCType: @encode(typeof(proxy_tag))
@@ -285,7 +285,7 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
 	  [aCoder decodeValueOfObjCType: @encode(id)
 				     at: &proxy_connection_out_port];
 
-	  NSAssert(proxy_connection_out_port, NSInternalInconsistencyException);
+	  NSAssert1(proxy_connection_out_port, @"%@", NSInternalInconsistencyException);
 	  /*
 	   #	If there already exists a connection for talking to the
 	   *	out port, we use that one rather than creating a new one from
@@ -305,10 +305,10 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
 	    NSLog(@"Receiving a triangle-connection proxy 0x%x "
 		  @"connection %p\n", target, proxy_connection);
 
-	  NSAssert(proxy_connection != decoder_connection,
-	    NSInternalInconsistencyException);
-	  NSAssert([proxy_connection isValid],
-	    NSInternalInconsistencyException);
+	  NSAssert1(proxy_connection != decoder_connection,
+	    @"%@", NSInternalInconsistencyException);
+	  NSAssert1([proxy_connection isValid],
+	    @"%@", NSInternalInconsistencyException);
 
 	  /*
 	   * We may not already have a proxy for the object on the
@@ -342,7 +342,7 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
 {
   NSDistantObject	*proxy;
 
-  NSAssert([aConnection isValid], NSInternalInconsistencyException);
+  NSAssert1([aConnection isValid], @"%@", NSInternalInconsistencyException);
 
   /*
    *	If there already is a local proxy for this target/connection
@@ -362,7 +362,7 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
 {
   NSDistantObject	*proxy;
 
-  NSAssert([aConnection isValid], NSInternalInconsistencyException);
+  NSAssert1([aConnection isValid], @"%@", NSInternalInconsistencyException);
 
   /*
    * If there already is a local proxy for this target/connection
@@ -483,7 +483,7 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
 */
 
   encoder_connection = [(NSPortCoder*)aRmc connection];
-  NSAssert(encoder_connection, NSInternalInconsistencyException);
+  NSAssert1(encoder_connection, @"%@", NSInternalInconsistencyException);
   if (![encoder_connection isValid])
     [NSException
 	    raise: NSGenericException
@@ -542,12 +542,12 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
       NSPort		*proxy_connection_out_port = [_connection sendPort];
       NSDistantObject	*localProxy;
 
-      NSAssert(proxy_connection_out_port,
-	NSInternalInconsistencyException);
-      NSAssert([proxy_connection_out_port isValid],
-	NSInternalInconsistencyException);
-      NSAssert(proxy_connection_out_port != [encoder_connection sendPort],
-	NSInternalInconsistencyException);
+      NSAssert1(proxy_connection_out_port,
+	@"%@", NSInternalInconsistencyException);
+      NSAssert1([proxy_connection_out_port isValid],
+	@"%@", NSInternalInconsistencyException);
+      NSAssert1(proxy_connection_out_port != [encoder_connection sendPort],
+	@"%@", NSInternalInconsistencyException);
 
       proxy_tag = PROXY_REMOTE_FOR_BOTH;
 
@@ -620,7 +620,7 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
  */
 - (id) initWithLocal: (id)anObject connection: (NSConnection*)aConnection
 {
-  NSAssert([aConnection isValid], NSInternalInconsistencyException);
+  NSAssert1([aConnection isValid], @"%@", NSInternalInconsistencyException);
 
   _object = RETAIN(anObject);
   _handle = 0;
@@ -641,7 +641,7 @@ GS_ROOT_CLASS @interface	GSDistantObjectPlaceHolder
  */
 - (id) initWithTarget: (unsigned)target connection: (NSConnection*)aConnection
 {
-  NSAssert([aConnection isValid], NSInternalInconsistencyException);
+  NSAssert1([aConnection isValid], @"%@", NSInternalInconsistencyException);
 
   _object = nil;
   _handle = target;

@@ -280,8 +280,8 @@ static NSHTTPCookieStorage   *storage = nil;
   NSString *path = [cookie path];
   NSString *domain = [cookie domain];
 
-  NSAssert([cookie isKindOfClass: [NSHTTPCookie class]] == YES,
-    NSInvalidArgumentException);
+  NSAssert1([cookie isKindOfClass: [NSHTTPCookie class]] == YES,
+    @"%@", NSInvalidArgumentException);
   
   remove_ck = nil;
   while ((ck = [ckenum nextObject]))

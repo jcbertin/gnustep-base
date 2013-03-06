@@ -493,8 +493,8 @@ static unsigned	encodingVersion;
   if (count != expected)
     {
       [NSException raise: NSInternalInconsistencyException
-		  format: @"expected array count %u and got %u",
-			expected, count];
+		  format: @"expected array count %lu and got %lu",
+			(unsigned long)expected, (unsigned long)count];
     }
 
   switch (*type)
@@ -1823,8 +1823,8 @@ static unsigned	encodingVersion;
     }
   else
     {
-      NSAssert(recv == [_conn receivePort] && send == [_conn sendPort],
-	NSInvalidArgumentException);
+      NSAssert1(recv == [_conn receivePort] && send == [_conn sendPort],
+	@"%@", NSInvalidArgumentException);
       /*
        * Re-initialising - destroy old components.
        */

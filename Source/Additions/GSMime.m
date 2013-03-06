@@ -1300,7 +1300,7 @@ wordData(NSString *word)
 {
   NSMutableString	*desc;
 
-  desc = [NSMutableString stringWithFormat: @"GSMimeParser <%0x> -\n", self];
+  desc = [NSMutableString stringWithFormat: @"GSMimeParser <%p> -\n", self];
   [desc appendString: [document description]];
   return desc;
 }
@@ -1533,7 +1533,8 @@ wordData(NSString *word)
       return NO;		/* Want no more data	*/
     }
 
-  NSDebugMLLog(@"GSMime", @"Parse %u bytes - '%*.*s'", l, l, l, [d bytes]);
+  NSDebugMLLog(@"GSMime", @"Parse %lu bytes - '%*.*s'",
+    (unsigned long)l, (int)l, (int)l, [d bytes]);
 
   r = [self _endOfHeaders: d];
   if (r.location == NSNotFound)
@@ -1620,8 +1621,8 @@ wordData(NSString *word)
                * This is an intermediary response ... so we have
                * to restart the parsing operation!
                */
-              NSDebugMLLog(@"GSMime",
-                @"Parsed http continuation", "");
+              NSDebugMLLog(@"GSMime", @"%@",
+                @"Parsed http continuation");
               flags.inBody = 0;
               if ([d length] == 0)
                 {
@@ -2414,7 +2415,8 @@ NSDebugMLLog(@"GSMime", @"Header parsed - %@", info);
       NSDebugMLLog(@"GSMime", @"Parse body expects %u bytes", expect);
     }
 
-  NSDebugMLLog(@"GSMime", @"Parse %u bytes - '%*.*s'", l, l, l, [d bytes]);
+  NSDebugMLLog(@"GSMime", @"Parse %lu bytes - '%*.*s'",
+    (unsigned long)l, (int)l, (int)l, [d bytes]);
   // NSDebugMLLog(@"GSMime", @"Boundary - '%*.*s'", [boundary length], [boundary length], [boundary bytes]);
 
   if ([context atEnd] == YES)
@@ -2470,7 +2472,7 @@ NSDebugMLLog(@"GSMime", @"Header parsed - %@", info);
 	      flags.inBody = 0;
 	      flags.complete = 1;
 
-	      NSDebugMLLog(@"GSMime", @"Parse body complete", "");
+	      NSDebugMLLog(@"GSMime", @"%@", @"Parse body complete");
 	      /*
 	       * If no content type is supplied, we assume text ... unless
 	       * we have something that's known to be a file.
@@ -3419,7 +3421,7 @@ static NSCharacterSet	*tokenSet = nil;
 {
   NSMutableString	*desc;
 
-  desc = [NSMutableString stringWithFormat: @"GSMimeHeader <%0x> -\n", self];
+  desc = [NSMutableString stringWithFormat: @"GSMimeHeader <%p> -\n", self];
   [desc appendFormat: @"  name: %@\n", [self name]];
   [desc appendFormat: @"  value: %@\n", [self value]];
   [desc appendFormat: @"  params: %@\n", [self parameters]];
@@ -3825,7 +3827,8 @@ appendString(NSMutableData *m, NSUInteger offset, NSUInteger fold,
   if (ok == NO)
     {
       NSDebugMLLog(@"GSMime",
-	@"Value for '%@' too long for folding at %u in header", n, fold);
+	@"Value for '%@' too long for folding at %lu in header", n,
+    (unsigned long)fold);
     }
 
   while ((k = [e nextObject]) != nil)
@@ -3843,16 +3846,16 @@ appendString(NSMutableData *m, NSUInteger offset, NSUInteger fold,
       if (ok == NO)
         {
 	  NSDebugMLLog(@"GSMime",
-	    @"Parameter name '%@' in '%@' too long for folding at %u",
-            k, n, fold);
+	    @"Parameter name '%@' in '%@' too long for folding at %lu",
+            k, n, (unsigned long)fold);
         }
       offset = appendBytes(md, offset, fold, "=", 1);
       offset = appendString(md, offset, fold, v, &ok);
       if (ok == NO)
         {
 	  NSDebugMLLog(@"GSMime",
-	    @"Parameter value for '%@' in '%@' too long for folding at %u",
-            k, n, fold);
+	    @"Parameter value for '%@' in '%@' too long for folding at %lu",
+            k, n, (unsigned long)fold);
         }
     }
   [md appendBytes: "\r\n" length: 2];
@@ -5438,7 +5441,7 @@ appendString(NSMutableData *m, NSUInteger offset, NSUInteger fold,
   NSMutableString	*desc;
   NSDictionary		*locale;
 
-  desc = [NSMutableString stringWithFormat: @"GSMimeDocument <%0x> -\n", self];
+  desc = [NSMutableString stringWithFormat: @"GSMimeDocument <%p> -\n", self];
   locale = [[NSUserDefaults standardUserDefaults] dictionaryRepresentation];
   [desc appendString: [headers descriptionWithLocale: locale]];
   [desc appendFormat: @"\nDocument content -\n%@", content];

@@ -290,9 +290,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
 
 - (int32_t) attributeForKey: (int)key
 {
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_attributes) / sizeof(*_attributes),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
 #if GS_USE_ICU == 1
   if (_attributes[key] <= 0)
     {
@@ -304,9 +304,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
 
 - (BOOL) boolForKey: (int)key
 {
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_attributes) / sizeof(*_attributes),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
 #if GS_USE_ICU == 1
   if (0 == _attributes[key])
     {
@@ -328,9 +328,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
   int32_t	length;
   UErrorCode	err = U_ZERO_ERROR;
 
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_symbols) / sizeof(*_symbols),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
   length = unum_getSymbol(_formatter, key, buffer, BUFFER_SIZE, &err);
   if (length > BUFFER_SIZE)
     length = BUFFER_SIZE;
@@ -347,9 +347,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
   int32_t	length;
   UErrorCode	err = U_ZERO_ERROR;
 
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_textAttributes) / sizeof(*_textAttributes),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
   length = unum_getTextAttribute(_formatter, key, buffer, BUFFER_SIZE, &err);
   if (length > BUFFER_SIZE)
     length = BUFFER_SIZE;
@@ -361,9 +361,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
 
 - (void) setAttribute: (int32_t)value forKey: (int)key
 {
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_attributes) / sizeof(*_attributes),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
 #if GS_USE_ICU == 1
   if (value < 0)
     value = -1;
@@ -375,9 +375,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
 
 - (void) setBool: (BOOL)value forKey: (int)key
 {
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_symbols) / sizeof(*_symbols),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
 #if GS_USE_ICU == 1
   _attributes[key] = (value ? 2 : 1);
   unum_setAttribute (_formatter, key, (int32_t)(value ? 1 : 0));
@@ -392,9 +392,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
   NSUInteger	length;
   UErrorCode	err = U_ZERO_ERROR;
 
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_symbols) / sizeof(*_symbols),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
   ASSIGNCOPY(_symbols[key], value);
   length = [value length];
   if (length > BUFFER_SIZE)
@@ -412,9 +412,9 @@ GS_PRIVATE_INTERNAL(NSNumberFormatter)
   NSUInteger	length;
   UErrorCode	err = U_ZERO_ERROR;
 
-  NSAssert(key >= 0
+  NSAssert1(key >= 0
     && key < sizeof(_textAttributes) / sizeof(*_textAttributes),
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
   ASSIGNCOPY(_textAttributes[key], value);
   length = [value length];
   if (length > BUFFER_SIZE)

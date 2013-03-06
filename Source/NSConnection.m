@@ -2039,8 +2039,8 @@ static NSLock	*cached_proxies_gate = nil;
     }
 
   [self _sendOutRmc: op type: METHOD_REQUEST];
-  NSDebugMLLog(@"NSConnection", @"Sent message %s RMC %d to 0x%x",
-    sel_getName([inv selector]), seq, (uintptr_t)self);
+  NSDebugMLLog(@"NSConnection", @"Sent message %s RMC %d to %p",
+    sel_getName([inv selector]), seq, self);
 
   if (needsResponse == NO)
     {
@@ -3230,7 +3230,7 @@ static NSLock	*cached_proxies_gate = nil;
     }
   NS_ENDHANDLER
 
-  NSDebugMLLog(@"NSConnection", @"Consuming reply RMC %d on %x", sn, self);
+  NSDebugMLLog(@"NSConnection", @"Consuming reply RMC %d on %p", sn, self);
   return rmc;
 }
 
@@ -3453,7 +3453,7 @@ static NSLock	*cached_proxies_gate = nil;
 	}
       if (raiseException == YES)
 	{
-	  [NSException raise: NSPortTimeoutException format: text];
+	  [NSException raise: NSPortTimeoutException format: @"%@", text];
 	}
       else
 	{
@@ -3504,9 +3504,9 @@ static NSLock	*cached_proxies_gate = nil;
    * Record the value in the IlocalObjects map, retaining it.
    */
   node = GSIMapNodeForKey(IlocalObjects, (GSIMapKey)object);
-  NSAssert(node == 0, NSInternalInconsistencyException);
+  NSAssert1(node == 0, @"%@", NSInternalInconsistencyException);
   node = GSIMapNodeForKey(IlocalTargets, (GSIMapKey)(NSUInteger)target);
-  NSAssert(node == 0, NSInternalInconsistencyException);
+  NSAssert1(node == 0, @"%@", NSInternalInconsistencyException);
 
   IF_NO_GC([anObj retain];)
   GSIMapAddPair(IlocalObjects, (GSIMapKey)object, (GSIMapVal)((id)anObj));

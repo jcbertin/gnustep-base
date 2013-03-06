@@ -842,15 +842,13 @@ main(int argc, char **argv, char **env)
 	  NSArray	*args = [argsRecognized allKeys];
 
 	  GSPrintf(stderr, @"Usage:\n");
-	  GSPrintf(stderr, [NSString stringWithFormat:
-	    @"    %@ [options] [files]\n", [argsGiven objectAtIndex: 0]]);
+	  GSPrintf(stderr, @"    %@ [options] [files]\n", [argsGiven objectAtIndex: 0]);
 	  GSPrintf(stderr, @"\n Options:\n");
 	  for (i = 0; i < [args count]; i++)
 	    {
 	      arg = [args objectAtIndex: i];
-	      GSPrintf(stderr,
-		[NSString stringWithFormat: @"     -%@\t%@\n\n",
-		   arg, [argsRecognized objectForKey: arg]]);
+	      GSPrintf(stderr, @"     -%@\t%@\n\n",
+		   arg, [argsRecognized objectForKey: arg]);
 	    }
 
 	  GSPrintf(stderr, @"\n Files:\n");

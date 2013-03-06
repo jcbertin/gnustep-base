@@ -796,8 +796,8 @@ static NSDistributedNotificationCenter	*netCenter = nil;
     removeObserver: self
 	      name: NSConnectionDidDieNotification
 	    object: connection];
-  NSAssert(connection == [_remote connectionForProxy],
-		 NSInternalInconsistencyException);
+  NSAssert1(connection == [_remote connectionForProxy],
+		 @"%@", NSInternalInconsistencyException);
   RELEASE(_remote);
   _remote = nil;
 }

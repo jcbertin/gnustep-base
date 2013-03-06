@@ -135,7 +135,7 @@ static NSLock		*pairLock = nil;
       [self close];
       return;
     }
-  NSAssert(ip != nil, NSGenericException);
+  NSAssert1(ip != nil, @"%@", NSGenericException);
   if (ti > 120.0)
     {
       ASSIGN(expires, [NSDate dateWithTimeIntervalSinceNow: 120.0]);

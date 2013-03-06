@@ -510,7 +510,7 @@ static inline void unlockNCTable(NCTable* t)
 #ifndef __OBJC_GC__
 static void obsFree(Observation *o)
 {
-  NSCAssert(o->retained >= 0, NSInternalInconsistencyException);
+  NSCAssert1(o->retained >= 0, @"%@", NSInternalInconsistencyException);
   if (o->retained-- == 0)
     {
       NCTable	*t = o->link;

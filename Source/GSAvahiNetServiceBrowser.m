@@ -459,8 +459,8 @@ GSAvahiServiceBrowserEvent(
       /* We can't recover if the type is wrong and we don't want to
        * leak random memory.
        */
-      NSAssert((_type < GSAvahiBrowserMax) && (_type != GSAvahiUnknownBrowser),
-	NSInternalInconsistencyException);
+      NSAssert1((_type < GSAvahiBrowserMax) && (_type != GSAvahiUnknownBrowser),
+                @"%@", NSInternalInconsistencyException);
       [self setHasFirstEvent: NO];
       switch (_type)
         {

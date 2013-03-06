@@ -265,8 +265,8 @@ decodePort(NSData *data, NSString *defaultAddress)
   unichar		c;
 
   pih = (GSPortItemHeader*)[data bytes];
-  NSCAssert(GSSwapBigI32ToHost(pih->type) == GSP_PORT,
-    NSInternalInconsistencyException);
+  NSCAssert1(GSSwapBigI32ToHost(pih->type) == GSP_PORT,
+    @"%@", NSInternalInconsistencyException);
   pi = (GSPortInfo*)&pih[1];
   pnum = GSSwapBigI16ToHost(pi->num);
   if (strncmp(pi->addr, "VER", 3) == 0)
@@ -465,7 +465,7 @@ static Class	runLoopClass;
   NSRunLoop		*l;
 
   M_LOCK(myLock);
-  NSDebugMLLog(@"GSTcpHandle", @"Connecting on 0x%x before %@", self, when);
+  NSDebugMLLog(@"GSTcpHandle", @"Connecting on %p before %@", self, when);
   if (state != GS_H_UNCON)
     {
       BOOL	result;
@@ -680,7 +680,7 @@ static Class	runLoopClass;
 
 - (NSString*) description
 {
-  return [NSString stringWithFormat: @"Handle (%d) to %s:%d",
+  return [NSString stringWithFormat: @"Handle (%d) to %@",
     desc, GSPrivateSockaddrName(&sockAddr)];
 }
 
@@ -733,7 +733,7 @@ static Class	runLoopClass;
 		 forMode: nil
 		     all: YES];
 #endif
-	  NSDebugMLLog(@"GSTcpHandle", @"invalidated 0x%x", self);
+	  NSDebugMLLog(@"GSTcpHandle", @"invalidated %p", self);
 	  [[self recvPort] removeHandle: self];
 	  [[self sendPort] removeHandle: self];
 #if	defined(__MINGW__)
@@ -799,7 +799,7 @@ static Class	runLoopClass;
     {
       if (res == 0)
         {
-          NSDebugMLLog(@"GSTcpHandle", @"read eof on 0x%x", self);
+          NSDebugMLLog(@"GSTcpHandle", @"read eof on %p", self);
           [self invalidate];
           return;
         }
@@ -817,7 +817,7 @@ static Class	runLoopClass;
 	}
 	res = 0;	/* Interrupted - continue	*/
     }
-  NSDebugMLLog(@"GSTcpHandle", @"read %d bytes on 0x%x", res, self);
+  NSDebugMLLog(@"GSTcpHandle", @"read %d bytes on %p", res, self);
   rLength += res;
 
   while (valid == YES && rLength >= rWant)
@@ -942,7 +942,7 @@ static Class	runLoopClass;
 	      h = (GSPortMsgHeader*)bytes;
 	      rId = GSSwapBigI32ToHost(h->mId);
 	      nItems = GSSwapBigI32ToHost(h->nItems);
-	      NSAssert(nItems >0, NSInternalInconsistencyException);
+	      NSAssert1(nItems >0, @"%@", NSInternalInconsistencyException);
 	      rItems = [mutableArrayClass allocWithZone: NSDefaultMallocZone()];
 	      rItems = [rItems initWithCapacity: nItems];
 	      if (rWant > sizeof(GSPortMsgHeader))
@@ -1068,7 +1068,7 @@ static Class	runLoopClass;
           rId = 0;
           DESTROY(rItems);
           NSDebugMLLog(@"GSTcpHandle",
-        	@"got message %@ on 0x%x", pm, self);
+        	@"got message %@ on %p", pm, self);
           IF_NO_GC(RETAIN(rp);)
           M_UNLOCK(myLock);
           NS_DURING
@@ -1117,7 +1117,7 @@ static Class	runLoopClass;
             {
 	      ASSIGN(defaultAddress, GSPrivateSockaddrHost(&sockAddr));
 	      NSDebugMLLog(@"GSTcpHandle",
-	        @"wrote %d bytes on 0x%x", len, self);
+	        @"wrote %d bytes on %p", len, self);
 	      state = GS_H_CONNECTED;
 	    }
 	  else
@@ -1176,7 +1176,7 @@ static Class	runLoopClass;
       else
         {
           NSDebugMLLog(@"GSTcpHandle",
-            @"wrote %d bytes on 0x%x", res, self);
+            @"wrote %d bytes on %p", res, self);
 	  wLength += res;
           if (wLength == l)
             {
@@ -1201,7 +1201,7 @@ static Class	runLoopClass;
 	           * message completed - remove from list.
 	           */
 	          NSDebugMLLog(@"GSTcpHandle",
-	            @"completed 0x%x on 0x%x", components, self);
+	            @"completed %p on %p", components, self);
 		  wData = nil;
 	          wItem = 0;
 	          [wMsgs removeObjectAtIndex: 0];
@@ -1334,9 +1334,9 @@ static Class	runLoopClass;
   NSRunLoop	*l;
   BOOL		sent = NO;
 
-  NSAssert([components count] > 0, NSInternalInconsistencyException);
+  NSAssert1([components count] > 0, @"%@", NSInternalInconsistencyException);
   NSDebugMLLog(@"GSTcpHandle",
-    @"Sending message 0x%x %@ on 0x%x(%d) before %@",
+    @"Sending message %p %@ on %p(%d) before %@",
     components, components, self, desc, when);
   M_LOCK(myLock);
   [wMsgs addObject: components];
@@ -1430,7 +1430,7 @@ static Class	runLoopClass;
     }
   M_UNLOCK(myLock);
   NSDebugMLLog(@"GSTcpHandle",
-    @"Message send 0x%x on 0x%x status %d", components, self, sent);
+    @"Message send %p on %p status %d", components, self, sent);
   RELEASE(self);
   return sent;
 }
@@ -1786,7 +1786,7 @@ static Class		tcpPortClass;
 
 - (void) finalize
 {
-  NSDebugMLLog(@"NSPort", @"NSSocketPort 0x%x finalized", self);
+  NSDebugMLLog(@"NSPort", @"NSSocketPort %p finalized", self);
   [self invalidate];
   if (handles != 0)
     {
@@ -2001,12 +2001,12 @@ static Class		tcpPortClass;
 
   if (d == nil)
     {
-      NSDebugMLLog(@"NSPort", @"No delegate to handle incoming message", 0);
+      NSDebugMLLog(@"NSPort", @"No delegate to handle incoming message");
       return;
     }
   if ([d respondsToSelector: @selector(handlePortMessage:)] == NO)
     {
-      NSDebugMLLog(@"NSPort", @"delegate doesn't handle messages", 0);
+      NSDebugMLLog(@"NSPort", @"delegate doesn't handle messages");
       return;
     }
   [d handlePortMessage: m];
@@ -2122,7 +2122,7 @@ static Class		tcpPortClass;
 #endif
   GSTcpHandle	*handle;
 
-  NSDebugMLLog(@"NSPort", @"received %s event %p on 0x%x",
+  NSDebugMLLog(@"NSPort", @"received %s event %p on %p",
     type == ET_RPORT ? "read" : "write", extra, self);
 
 #if	defined(__MINGW__)

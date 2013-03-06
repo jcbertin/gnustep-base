@@ -917,7 +917,7 @@ static inline int getDigits(const char *from, char *to, int limit, BOOL *error)
 			error = YES;
 			NSDebugMLog(
 			  @"Expected literal '%%' but got end of string parsing"
-			  @"'%@' using '%@'", source[sourceIdx],
+			  @"'%@' using '%@'",
 			  description, fmt);
 		      }
 		    break;
@@ -1530,24 +1530,24 @@ static inline int getDigits(const char *from, char *to, int limit, BOOL *error)
 
   if (month < 1 || month > 12)
     {
-      NSWarnMLog(@"invalid month given - %u", month);
+      NSWarnMLog(@"invalid month given - %lu", (unsigned long)month);
     }
   c = lastDayOfGregorianMonth(month, year);
   if (day < 1 || day > c)
     {
-      NSWarnMLog(@"invalid day given - %u", day);
+      NSWarnMLog(@"invalid day given - %lu", (unsigned long)day);
     }
   if (hour > 23)
     {
-      NSWarnMLog(@"invalid hour given - %u", hour);
+      NSWarnMLog(@"invalid hour given - %lu", (unsigned long)hour);
     }
   if (minute > 59)
     {
-      NSWarnMLog(@"invalid minute given - %u", minute);
+      NSWarnMLog(@"invalid minute given - %lu", (unsigned long)minute);
     }
   if (second > 59)
     {
-      NSWarnMLog(@"invalid second given - %u", second);
+      NSWarnMLog(@"invalid second given - %lu", (unsigned long)second);
     }
 
   // Calculate date as GMT

@@ -499,7 +499,7 @@ static NSMutableDictionary      *certificateListCache = nil;
   int             i;
 
   [str appendString: @"\n"];
-  [str appendFormat: _(@"- Certificate info:\n")];
+  [str appendFormat: @"%@", _(@"- Certificate info:\n")];
 
   expiret = gnutls_x509_crt_get_expiration_time(cert);
   activet = gnutls_x509_crt_get_activation_time(cert);

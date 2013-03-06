@@ -1572,7 +1572,7 @@ GSICUStringMatchesRegex(NSString *string, NSString *regex, NSStringCompareOption
 
 - (id) _eval_count: (NSArray *)expressions
 {
-  NSAssert(_argc == 1, NSInternalInconsistencyException);
+  NSAssert1(_argc == 1, @"%@", NSInternalInconsistencyException);
   return [NSNumber numberWithUnsignedInt:
     [[expressions objectAtIndex: 0] count]];
 }

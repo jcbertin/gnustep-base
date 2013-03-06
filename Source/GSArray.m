@@ -89,8 +89,8 @@ static Class	GSInlineArrayClass;
     self, @"Array", nil, nil];
 
   reason = [NSString stringWithFormat:
-    @"Index %d is out of range %d (in '%@')",
-    index, _count, NSStringFromSelector(sel)];
+    @"Index %lu is out of range %d (in '%@')",
+    (unsigned long)index, _count, NSStringFromSelector(sel)];
 
   exception = [NSException exceptionWithName: NSRangeException
 		                      reason: reason

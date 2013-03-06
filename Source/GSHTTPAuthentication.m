@@ -102,10 +102,10 @@ static GSMimeParser		*mimeParser = nil;
   NSURLProtectionSpace	*known = nil;
   GSHTTPAuthentication	*authentication = nil;
 
-  NSAssert([credential isKindOfClass: [NSURLCredential class]] == YES,
-    NSInvalidArgumentException);
-  NSAssert([space isKindOfClass: [NSURLProtectionSpace class]] == YES,
-    NSInvalidArgumentException);
+  NSAssert1([credential isKindOfClass: [NSURLCredential class]] == YES,
+    @"%@", NSInvalidArgumentException);
+  NSAssert1([space isKindOfClass: [NSURLProtectionSpace class]] == YES,
+    @"%@", NSInvalidArgumentException);
 
   [storeLock lock];
   NS_DURING

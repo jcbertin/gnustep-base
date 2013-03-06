@@ -124,7 +124,7 @@ extern "C" {
  * <em>raised</em> using the -raise method.
  */
 + (void) raise: (NSString*)name
-	format: (NSString*)format,...;
+	format: (NSString*)format, ... NS_FORMAT_FUNCTION(2,3);
 
 /**
  * Creates an exception with a name and a reason string using the
@@ -134,7 +134,7 @@ extern "C" {
  */
 + (void) raise: (NSString*)name
 	format: (NSString*)format
-     arguments: (va_list)argList;
+     arguments: (va_list)argList NS_FORMAT_FUNCTION(2,0);
 
 #if OS_API_VERSION(100500,GS_API_LATEST) && GS_API_VERSION( 11501,GS_API_LATEST)
 /** Returns an array of the call stack return addresses at the point when
@@ -387,13 +387,13 @@ GS_EXPORT void _NSRemoveHandler( NSHandler *handler );
 - (void) handleFailureInFunction: (NSString*)functionName 
 			    file: (NSString*)fileName 
 		      lineNumber: (NSInteger)line 
-		     description: (NSString*)format,... GS_NORETURN_METHOD;
+		     description: (NSString*)format, ... GS_NORETURN_METHOD NS_FORMAT_FUNCTION(4,5);
 
 - (void) handleFailureInMethod: (SEL)aSelector 
 			object: object 
 			  file: (NSString*)fileName 
 		    lineNumber: (NSInteger)line 
-		   description: (NSString*)format,... GS_NORETURN_METHOD;
+		   description: (NSString*)format,... GS_NORETURN_METHOD NS_FORMAT_FUNCTION(5,6);
 
 @end
 extern NSString *const NSAssertionHandlerKey;

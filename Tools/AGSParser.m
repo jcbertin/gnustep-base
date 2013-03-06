@@ -78,7 +78,7 @@
   if (createSec)
     {
       secHeading = [NSString stringWithFormat:
-        @"<section id=\"_main\">\n<heading></heading>\n", toolName];
+        @"<section id=\"_main\">\n<heading>%@</heading>\n", toolName];
   //The %@ tool
       [m replaceCharactersInRange: r withString: secHeading];
     }
@@ -264,7 +264,7 @@ in the returned dictionary. */
   BOOL			wasInArgList = inArgList;
   NSMutableArray	*a = nil;
 
-  NSAssert([d objectForKey: @"Args"] == nil, NSInternalInconsistencyException);
+  NSAssert1([d objectForKey: @"Args"] == nil, @"%@", NSInternalInconsistencyException);
   a = [[NSMutableArray alloc] initWithCapacity: 4];
   [d setObject: a forKey: @"Args"];
   RELEASE(a);

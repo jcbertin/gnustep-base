@@ -45,7 +45,7 @@ extern "C" {
 + (id) set;
 + (id) setWithArray: (NSArray*)objects;
 + (id) setWithObject: (id)anObject;
-+ (id) setWithObjects: (id)firstObject, ...;
++ (id) setWithObjects: (id)firstObject, ... NS_REQUIRES_NIL_TERMINATION;
 #if OS_API_VERSION(GS_API_MACOSX, GS_API_LATEST)
 + (id) setWithObjects: (const id[])objects
 		count: (NSUInteger)count;
@@ -61,7 +61,7 @@ extern "C" {
 
 - (id) init;
 - (id) initWithArray: (NSArray*)other;
-- (id) initWithObjects: (id)firstObject, ...;
+- (id) initWithObjects: (id)firstObject, ... NS_REQUIRES_NIL_TERMINATION;
 - (id) initWithObjects: (const id[])objects
 		 count: (NSUInteger)count;
 - (id) initWithSet: (NSSet*)other;

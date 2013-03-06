@@ -1129,7 +1129,7 @@ updateTimer(NSTimer *t, NSDate *d, NSTimeInterval now)
   NSString		*savedMode = _currentMode;
   NSAutoreleasePool	*arp = [NSAutoreleasePool new];
 
-  NSAssert(mode, NSInvalidArgumentException);
+  NSAssert1(mode, @"%@", NSInvalidArgumentException);
   if (mode == nil)
     {
       mode = NSDefaultRunLoopMode;
@@ -1249,7 +1249,7 @@ updateTimer(NSTimer *t, NSDate *d, NSTimeInterval now)
   NSAutoreleasePool	*arp = [NSAutoreleasePool new];
   NSDate		*d;
 
-  NSAssert(mode != nil, NSInvalidArgumentException);
+  NSAssert1(mode != nil, @"%@", NSInvalidArgumentException);
 
   /* Find out how long we can wait before first limit date. */
   d = [self limitDateForMode: mode];

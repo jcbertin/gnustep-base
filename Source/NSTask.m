@@ -538,8 +538,8 @@ pty_slave(const char* name)
       [NSException raise: NSInvalidArgumentException
                   format: @"NSTask - task has been launched"];
     }
-  NSAssert(hdl != nil && ([hdl isKindOfClass: [NSFileHandle class]] ||
-    [hdl isKindOfClass: [NSPipe class]]), NSInvalidArgumentException);
+  NSAssert1(hdl != nil && ([hdl isKindOfClass: [NSFileHandle class]] ||
+    [hdl isKindOfClass: [NSPipe class]]), @"%@", NSInvalidArgumentException);
   ASSIGN(_standardError, hdl);
 }
 
@@ -560,8 +560,8 @@ pty_slave(const char* name)
       [NSException raise: NSInvalidArgumentException
                   format: @"NSTask - task has been launched"];
     }
-  NSAssert(hdl != nil && ([hdl isKindOfClass: [NSFileHandle class]] ||
-    [hdl isKindOfClass: [NSPipe class]]), NSInvalidArgumentException);
+  NSAssert1(hdl != nil && ([hdl isKindOfClass: [NSFileHandle class]] ||
+    [hdl isKindOfClass: [NSPipe class]]), @"%@", NSInvalidArgumentException);
   ASSIGN(_standardInput, hdl);
 }
 
@@ -582,8 +582,8 @@ pty_slave(const char* name)
       [NSException raise: NSInvalidArgumentException
                   format: @"NSTask - task has been launched"];
     }
-  NSAssert(hdl != nil && ([hdl isKindOfClass: [NSFileHandle class]] ||
-    [hdl isKindOfClass: [NSPipe class]]), NSInvalidArgumentException);
+  NSAssert1(hdl != nil && ([hdl isKindOfClass: [NSFileHandle class]] ||
+    [hdl isKindOfClass: [NSPipe class]]), @"%@", NSInvalidArgumentException);
   ASSIGN(_standardOutput, hdl);
 }
 
