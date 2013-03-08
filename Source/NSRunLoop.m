@@ -65,7 +65,8 @@
 
 NSString * const NSDefaultRunLoopMode = @"NSDefaultRunLoopMode";
 
-static NSDate	*theFuture = nil;
+static NSDate		*theFuture = nil;
+static NSRunLoop	*mainRunLoop = nil;
 
 @interface NSObject (OptionalPortRunLoop)
 - (void) getFds: (NSInteger*)fds count: (NSInteger*)count;
@@ -722,7 +723,7 @@ static inline BOOL timerInvalidated(NSTimer *t)
       current = info->loop = [[self alloc] _init];
       /* If this is the main thread, set up a housekeeping timer.
        */
-      if ([GSCurrentThread() isMainThread] == YES)
+      if (GSIsMainThread() == YES)
         {
           NSAutoreleasePool		*arp = [NSAutoreleasePool new];
           GSRunLoopCtxt	                *context;
@@ -766,9 +767,19 @@ static inline BOOL timerInvalidated(NSTimer *t)
                                             repeats: YES];
           context->housekeeper = timer;
           [arp drain];
+
+	  /* This is the run loop for the main thread:
+	   * save it for everyone.
+	   */
+	  mainRunLoop = current;
         }
     }
   return current;
+}
+
++ (NSRunLoop*) mainRunLoop
+{
+  return mainRunLoop;
 }
 
 - (id) init

@@ -54,6 +54,7 @@ GS_EXPORT NSString * const NSDefaultRunLoopMode;
 }
 
 + (NSRunLoop*) currentRunLoop;
++ (NSRunLoop*) mainRunLoop;
 
 - (void) acceptInputForMode: (NSString*)mode
                  beforeDate: (NSDate*)limit_date;

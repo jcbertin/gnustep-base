@@ -41,6 +41,7 @@ extern "C" {
 @end
 
 GS_EXPORT NSThread *GSCurrentThread(void);
+GS_EXPORT BOOL GSIsMainThread(void);
 GS_EXPORT NSMutableDictionary *GSCurrentThreadDictionary(void);
 
 #endif	/* OS_API_VERSION */

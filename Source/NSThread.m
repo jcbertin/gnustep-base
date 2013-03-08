@@ -87,9 +87,12 @@
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 #  include <pthread_np.h>
-#  define IS_MAIN_PTHREAD (pthread_main_np() == 1)
+#  define IS_MAIN_PTHREAD pthread_main_np()
 #else
-#  define IS_MAIN_PTHREAD (1)
+#  define MAIN_PTHREAD_NEEDS_LOAD 1
+#  define IS_MAIN_PTHREAD pthread_equal(_main_pthread, pthread_self())
+/* clang is whining if it's static so make it global internal... */
+GS_ATTRIB_PRIVATE pthread_t _main_pthread;
 #endif
 
 
@@ -107,7 +110,6 @@
 + (void) _endThread: (NSThread*)thread;
 @end
 
-static Class threadClass = Nil;
 static NSNotificationCenter *nc = nil;
 
 /**
@@ -341,6 +343,12 @@ GSCurrentThread(void)
   return thr;
 }
 
+inline BOOL
+GSIsMainThread(void)
+{
+  return (GSCurrentThread() == defaultThread ? YES : NO);
+}
+
 NSMutableDictionary*
 GSDictionaryForThread(NSThread *t)
 {
@@ -364,7 +372,7 @@ GSCurrentThreadDictionary(void)
  * Callback function so send notifications on becoming multi-threaded.
  */
 static void
-gnustep_base_thread_callback(void)
+notifyBecomingMultiThreaded(void)
 {
   /*
    * Protect this function with locking ... to avoid any possibility
@@ -432,12 +440,39 @@ gnustep_base_thread_callback(void)
 
 @implementation NSThread
 
+#if __OBJC_GC__ || GS_WITH_GC
+static void
+registerThreadWithGC(void)
+{
+#if __OBJC_GC__
+  objc_registerThreadWithCollector();
+#endif
+#if GS_WITH_GC && defined(HAVE_GC_REGISTER_MY_THREAD)
+  struct GC_stack_base        base;
+
+  if (GC_get_stack_base(&base) == GC_SUCCESS)
+    {
+      int     result;
+
+      result = GC_register_my_thread(&base);
+      if (result != GC_SUCCESS && result != GC_DUPLICATE)
+        {
+          fprintf(stderr, "Argh ... no thread support in garbage collection library\n");
+        }
+    }
+  else
+    {
+      fprintf(stderr, "Unable to determine stack base to register new thread for garbage collection\n");
+    }
+#endif
+}
+#endif /* __OBJC_GC__ || GS_WITH_GC */
+
 static void
 setThreadForCurrentThread(NSThread *t)
 {
   [[NSGarbageCollector defaultCollector] disableCollectorForPointer: t];
   pthread_setspecific(thread_object_key, t);
-  gnustep_base_thread_callback();
 }
 
 static void
@@ -485,9 +520,17 @@ unregisterActiveThread(NSThread *thread)
     {
       t = [self new];
       t->_active = YES;
-      [[NSGarbageCollector defaultCollector] disableCollectorForPointer: t];
-      pthread_setspecific(thread_object_key, t);
+      setThreadForCurrentThread(t);
       GS_CONSUMED(t);
+      /* Don't send notification when registering main thread. */
+      if (!IS_MAIN_PTHREAD)
+	{
+#if __OBJC_GC__ || GS_WITH_GC
+	  /* FIXME: should we register main thread with GC? */
+	  registerThreadWithGC();
+#endif
+	  notifyBecomingMultiThreaded();
+	}
       return YES;
     }
   return NO;
@@ -524,7 +567,7 @@ unregisterActiveThread(NSThread *thread)
     {
       unregisterActiveThread (t);
 
-      if (t == defaultThread || defaultThread == nil)
+      if (t == defaultThread)
 	{
 	  /* For the default thread, we exit the process.
 	   */
@@ -540,22 +583,15 @@ unregisterActiveThread(NSThread *thread)
 /*
  * Class initialization
  */
-+ (void) initialize
++ (void) load
 {
-  if (self == [NSThread class])
+  if (pthread_key_create(&thread_object_key, exitedThread))
     {
-      if (pthread_key_create(&thread_object_key, exitedThread))
-	{
-	  [NSException raise: NSInternalInconsistencyException
-		      format: @"Unable to create thread key!"];
-	}
-      /*
-       * Ensure that the default thread exists.
-       */
-      threadClass = self;
-
-      GSCurrentThread();
+      abort();
     }
+#if MAIN_PTHREAD_NEEDS_LOAD
+  _main_pthread = pthread_self();
+#endif
 }
 
 + (BOOL) isMainThread
@@ -769,30 +805,10 @@ unregisterActiveThread(NSThread *thread)
  */
 static void *nsthreadLauncher(void* thread)
 {
-    NSThread *t = (NSThread*)thread;
-    setThreadForCurrentThread(t);
-#if __OBJC_GC__
-	objc_registerThreadWithCollector();
-#endif
-#if	GS_WITH_GC && defined(HAVE_GC_REGISTER_MY_THREAD)
-  {
-    struct GC_stack_base	base;
-
-    if (GC_get_stack_base(&base) == GC_SUCCESS)
-      {
-	int	result;
-
-	result = GC_register_my_thread(&base);
-	if (result != GC_SUCCESS && result != GC_DUPLICATE)
-	  {
-	    fprintf(stderr, "Argh ... no thread support in garbage collection library\n");
-	  }
-      }
-    else
-      {
-	fprintf(stderr, "Unable to determine stack base to register new thread for garbage collection\n");
-      }
-  }
+  NSThread *t = (NSThread*)thread;
+  setThreadForCurrentThread(t);
+#if __OBJC_GC__ || GS_WITH_GC
+  registerThreadWithGC();
 #endif
 
   /*
@@ -842,7 +858,7 @@ static void *nsthreadLauncher(void* thread)
 
   /* Make sure the notification is posted BEFORE the new thread starts.
    */
-  gnustep_base_thread_callback();
+  notifyBecomingMultiThreaded();
 
   /* The thread must persist until it finishes executing.
    */
@@ -1189,14 +1205,9 @@ GSRunLoopInfoForThread(NSThread *aThread)
 		       waitUntilDone: (BOOL)aFlag
 			       modes: (NSArray*)anArray
 {
-  /* It's possible that this method could be called before the NSThread
-   * class is initialised, so we check and make sure it's initiailised
-   * if necessary.
+  /* NSThread class is initialised in NSObject+initialize,
+   * so we don't need to check defaultThread initialization.
    */
-  if (defaultThread == nil)
-    {
-      [NSThread currentThread];
-    }
   [self performSelector: aSelector
                onThread: defaultThread
              withObject: anObject

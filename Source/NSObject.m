@@ -1147,6 +1147,9 @@ static id gs_weak_load(id obj)
        */
       zombieClass = objc_lookUpClass("NSZombie");
 
+      /* Make sure that default thread is correctly set up. */
+      GSCurrentThread();
+
       /* Now that we have a workign autorelease system and working string
        * classes we are able to set up notifications.
        */
