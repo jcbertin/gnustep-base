@@ -3721,7 +3721,9 @@ isEqualFunc(const void *item1, const void *item2,
       offset = [dest length];
       [dest setLength: offset + sizeof(unichar)*len];
       buffer = [dest mutableBytes] + offset;
-      [string getCharacters: (unichar*)buffer];
+      // Fix alignment warning. This warning can safely
+      // be ignored since offset is always aligned with unichar.
+      [string getCharacters: (unichar*)(intptr_t)buffer];
 
       // Always store in big-endian, so if machine is little-endian,
       // perform byte-swapping.
