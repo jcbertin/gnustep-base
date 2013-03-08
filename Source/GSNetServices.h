@@ -27,6 +27,7 @@
 #define	EXPOSE_NSNetServiceBrowser_IVARS	1
 #import	"Foundation/NSNetServices.h"
 #import "GNUstepBase/NSNetServices+GNUstepBase.h"
+#import "NSNetServicesPrivate.h"
 
 #if GS_USE_AVAHI==1
 
