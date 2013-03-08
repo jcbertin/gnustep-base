@@ -47,7 +47,7 @@ extern "C" {
 + (id) dictionaryWithObjects: (const id[])objects
 		     forKeys: (const id[])keys
 		       count: (NSUInteger)count;
-+ (id) dictionaryWithObjectsAndKeys: (id)firstObject, ...;
++ (id) dictionaryWithObjectsAndKeys: (id)firstObject, ... NS_REQUIRES_NIL_TERMINATION;
 
 - (NSArray*) allKeys;
 - (NSArray*) allKeysForObject: (id)anObject;
@@ -79,7 +79,7 @@ DEFINE_BLOCK_TYPE(GSKeysAndObjectsEnumeratorBlock, void, id, id, BOOL*);
 - (id) initWithDictionary: (NSDictionary*)otherDictionary;
 - (id) initWithDictionary: (NSDictionary*)other copyItems: (BOOL)shouldCopy;
 - (id) initWithObjects: (NSArray*)objects forKeys: (NSArray*)keys;
-- (id) initWithObjectsAndKeys: (id)firstObject, ...;
+- (id) initWithObjectsAndKeys: (id)firstObject, ... NS_REQUIRES_NIL_TERMINATION;
 - (id) initWithObjects: (const id[])objects
 	       forKeys: (const id[])keys
 		 count: (NSUInteger)count;			// Primitive

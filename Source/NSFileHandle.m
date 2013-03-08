@@ -976,7 +976,7 @@ GSTLSHandlePush(gnutls_transport_ptr_t handle, const void *buffer, size_t len)
 
 - (BOOL) sslHandshakeEstablished: (BOOL*)result outgoing: (BOOL)isOutgoing
 {
-  NSAssert(0 != result, NSInvalidArgumentException);
+  NSAssert1(0 != result, @"%@", NSInvalidArgumentException);
 
   if (YES == [session active])
     {

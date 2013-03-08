@@ -46,7 +46,7 @@
 - (NSString*) description
 {
   return [NSString stringWithFormat:
-    @"NSPortMessage 0x%x (Id %u)\n  Send: %@\n  Recv: %@\n  Components -\n%@",
+    @"NSPortMessage %p (Id %u)\n  Send: %@\n  Recv: %@\n  Components -\n%@",
     self, _msgid, _send, _recv, _components];
 }
 

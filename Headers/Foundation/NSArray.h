@@ -67,7 +67,7 @@ typedef NSUInteger NSBinarySearchingOptions;
 + (id) arrayWithContentsOfURL: (NSURL*)aURL;
 #endif
 + (id) arrayWithObject: (id)anObject;
-+ (id) arrayWithObjects: (id)firstObject, ...;
++ (id) arrayWithObjects: (id)firstObject, ... NS_REQUIRES_NIL_TERMINATION;
 + (id) arrayWithObjects: (const id[])objects count: (NSUInteger)count;
 
 - (NSArray*) arrayByAddingObject: (id)anObject;
@@ -93,7 +93,7 @@ typedef NSUInteger NSBinarySearchingOptions;
 #if OS_API_VERSION(GS_API_MACOSX, GS_API_LATEST)
 - (id) initWithContentsOfURL: (NSURL*)aURL;
 #endif
-- (id) initWithObjects: firstObject, ...;
+- (id) initWithObjects: firstObject, ... NS_REQUIRES_NIL_TERMINATION;
 
 /** <init /> <override-subclass />
  * This should initialize the array with count (may be zero) objects.<br />

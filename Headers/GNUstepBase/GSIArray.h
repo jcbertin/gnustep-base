@@ -51,7 +51,7 @@ extern "C" {
 #endif
 
 #ifdef	GSI_ARRAY_CHECKS
-#define	GSI_ARRAY_CHECK NSCAssert(array->count <= array->cap && array->old <= array->cap, NSInternalInconsistencyException)
+#define	GSI_ARRAY_CHECK NSCAssert1(array->count <= array->cap && array->old <= array->cap, @"%@", NSInternalInconsistencyException)
 #else
 #define	GSI_ARRAY_CHECK
 #endif
@@ -399,7 +399,7 @@ GSIArrayInsertionPosition(GSIArray array, GSIArrayItem item,
       index++;
     }
 #ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(index <= array->count, NSInternalInconsistencyException);
+  NSCAssert1(index <= array->count, @"%@", NSInternalInconsistencyException);
 #endif
   return index;
 }
@@ -414,8 +414,8 @@ GSIArrayCheckSort(GSIArray array,
   for (i = 1; i < array->count; i++)
     {
 #ifdef	GSI_ARRAY_CHECKS
-      NSCAssert(((*sorter)(array->ptr[i-1], array->ptr[i]) 
-        != NSOrderedDescending), NSInvalidArgumentException);
+      NSCAssert1(((*sorter)(array->ptr[i-1], array->ptr[i]) 
+        != NSOrderedDescending), @"%@", NSInvalidArgumentException);
 #endif
     }
 }
@@ -458,7 +458,7 @@ GSIArrayRemoveItemAtIndex(GSIArray array, unsigned index)
 {
 #if	defined(GSI_ARRAY_NO_RELEASE)
 # ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(index < array->count, NSInvalidArgumentException);
+  NSCAssert1(index < array->count, @"%@", NSInvalidArgumentException);
 # endif
   while (++index < array->count)
     array->ptr[index-1] = array->ptr[index];
@@ -469,7 +469,7 @@ GSIArrayRemoveItemAtIndex(GSIArray array, unsigned index)
 #else
   GSIArrayItem	tmp;
 # ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(index < array->count, NSInvalidArgumentException);
+  NSCAssert1(index < array->count, @"%@", NSInvalidArgumentException);
 # endif
   tmp = array->ptr[index];
   while (++index < array->count)
@@ -486,7 +486,7 @@ static INLINE void
 GSIArrayRemoveLastItem(GSIArray array)
 {
 #ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(array->count, NSInvalidArgumentException);
+  NSCAssert1(array->count, @"%@", NSInvalidArgumentException);
 #endif
   array->count--;
 #if	!defined(GSI_ARRAY_NO_RELEASE)
@@ -501,7 +501,7 @@ static INLINE void
 GSIArrayRemoveItemAtIndexNoRelease(GSIArray array, unsigned index)
 {
 #ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(index < array->count, NSInvalidArgumentException);
+  NSCAssert1(index < array->count, @"%@", NSInvalidArgumentException);
 #endif
   while (++index < array->count)
     array->ptr[index-1] = array->ptr[index];
@@ -516,14 +516,14 @@ GSIArraySetItemAtIndex(GSIArray array, GSIArrayItem item, unsigned index)
 {
 #if	defined(GSI_ARRAY_NO_RELEASE)
 # ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(index < array->count, NSInvalidArgumentException);
+  NSCAssert1(index < array->count, @"%@", NSInvalidArgumentException);
 # endif
   GSI_ARRAY_RETAIN(array, item);
   array->ptr[index] = item;
 #else
   GSIArrayItem	tmp;
 # ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(index < array->count, NSInvalidArgumentException);
+  NSCAssert1(index < array->count, @"%@", NSInvalidArgumentException);
 # endif
   tmp = array->ptr[index];
   GSI_ARRAY_RETAIN(array, item);
@@ -546,7 +546,7 @@ static INLINE GSIArrayItem
 GSIArrayItemAtIndex(GSIArray array, unsigned index)
 {
 #ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(index < array->count, NSInvalidArgumentException);
+  NSCAssert1(index < array->count, @"%@", NSInvalidArgumentException);
 #endif
   return array->ptr[index];
 }
@@ -555,7 +555,7 @@ static INLINE GSIArrayItem
 GSIArrayLastItem(GSIArray array)
 {
 #ifdef	GSI_ARRAY_CHECKS
-  NSCAssert(array->count, NSInvalidArgumentException);
+  NSCAssert1(array->count, @"%@", NSInvalidArgumentException);
 #endif
   return array->ptr[array->count-1];
 }

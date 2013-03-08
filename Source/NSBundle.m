@@ -391,7 +391,7 @@ GSPrivateExecutablePath()
 	  beenHere = YES;
 	}
       [load_lock unlock];
-      NSCAssert(executablePath != nil, NSInternalInconsistencyException);
+      NSCAssert1(executablePath != nil, @"%@", NSInternalInconsistencyException);
     }
   return executablePath;
 }
@@ -1016,8 +1016,8 @@ static void
 _bundle_load_callback(Class theClass, struct objc_category *theCategory)
 {
   const char *className;
-  NSCAssert(_loadingBundle, NSInternalInconsistencyException);
-  NSCAssert(_loadingFrameworks, NSInternalInconsistencyException);
+  NSCAssert1(_loadingBundle, @"%@", NSInternalInconsistencyException);
+  NSCAssert1(_loadingFrameworks, @"%@", NSInternalInconsistencyException);
 
   /* We never record categories - if this is a category, just do nothing.  */
   if (theCategory != 0)
@@ -1473,7 +1473,7 @@ _bundle_load_callback(Class theClass, struct objc_category *theCategory)
       _mainBundle = [self alloc];
       /* Please note that _mainBundle should *not* be nil.  */
       _mainBundle = [_mainBundle initWithPath: path];
-      NSAssert(_mainBundle != nil, NSInternalInconsistencyException);
+      NSAssert1(_mainBundle != nil, @"%@", NSInternalInconsistencyException);
     }
 
   [load_lock unlock];

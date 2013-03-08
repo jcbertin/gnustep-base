@@ -202,9 +202,9 @@ static Class	NSPort_concrete_class;
 
 - (void) setDelegate: (id) anObject
 {
-  NSAssert(anObject == nil
+  NSAssert1(anObject == nil
     || [anObject respondsToSelector: @selector(handlePortMessage:)],
-    NSInvalidArgumentException);
+    @"%@", NSInvalidArgumentException);
   _delegate = anObject;
 }
 

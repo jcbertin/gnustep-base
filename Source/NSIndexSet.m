@@ -288,19 +288,20 @@ static NSUInteger posForIndex(GSIArray array, NSUInteger index)
         [super description]];
     }
   m = [NSMutableString stringWithFormat:
-    @"%@[number of indexes: %u (in %u ranges), indexes:",
-    [super description], [self count], c];
+    @"%@[number of indexes: %lu (in %lu ranges), indexes:",
+    [super description], (unsigned long)[self count], (unsigned long)c];
   for (i = 0; i < c; i++)
     {
       NSRange	r = GSIArrayItemAtIndex(_array, i).ext;
 
       if (r.length > 1)
         {
-          [m appendFormat: @" (%u-%u)", r.location, NSMaxRange(r) - 1];
+          [m appendFormat: @" (%lu-%lu)", (unsigned long)r.location,
+             (unsigned long)(NSMaxRange(r) - 1)];
 	}
       else
         {
-          [m appendFormat: @" %u", r.location];
+          [m appendFormat: @" %lu", (unsigned long)r.location];
 	}
     }
   [m appendString: @"]"];
@@ -660,8 +661,8 @@ static NSUInteger posForIndex(GSIArray array, NSUInteger index)
                   break;
                 }
             }
-          NSAssert(index + offset < length && bytes[index + offset] < 0x80,
-            NSInternalInconsistencyException);
+          NSAssert1(index + offset < length && bytes[index + offset] < 0x80,
+            @"%@", NSInternalInconsistencyException);
           next = index + offset + 1;
           value = bytes[index + offset];
           while (offset-- > 0)
@@ -678,8 +679,8 @@ static NSUInteger posForIndex(GSIArray array, NSUInteger index)
                   break;
                 }
             }
-          NSAssert(index + offset < length && bytes[index + offset] < 0x80,
-            NSInternalInconsistencyException);
+          NSAssert1(index + offset < length && bytes[index + offset] < 0x80,
+            @"%@", NSInternalInconsistencyException);
           next = index + offset + 1;
           value = bytes[index + offset];
           while (offset-- > 0)
@@ -1451,8 +1452,8 @@ static NSUInteger posForIndex(GSIArray array, NSUInteger index)
 
 - (id) _initWithBytes: (const void*)bytes length: (NSUInteger)length
 {
-  NSAssert(length % sizeof(GSIArrayItem) == 0, NSInvalidArgumentException);
-  NSAssert(length % __alignof__(GSIArrayItem) == 0, NSInvalidArgumentException);
+  NSAssert1(length % sizeof(GSIArrayItem) == 0, @"%@", NSInvalidArgumentException);
+  NSAssert1(length % __alignof__(GSIArrayItem) == 0, @"%@", NSInvalidArgumentException);
   length /= sizeof(NSRange);
   _data = NSZoneMalloc([self zone], sizeof(GSIArray_t));
   _array->ptr = (GSIArrayItem*)bytes;

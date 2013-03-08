@@ -214,16 +214,16 @@ GS_PRIVATE_INTERNAL(NSXMLDTD)
   NSUInteger childCount = [self childCount];
 
   // Check to make sure this is a valid addition...
-  NSAssert(nil != child, NSInvalidArgumentException);
-  NSAssert(index <= childCount, NSInvalidArgumentException);
-  NSAssert(nil == [child parent], NSInvalidArgumentException);
-  NSAssert(NSXMLAttributeKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLDTDKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLDocumentKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLElementKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLInvalidKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLNamespaceKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLTextKind != theKind, NSInvalidArgumentException);
+  NSAssert1(nil != child, @"%@", NSInvalidArgumentException);
+  NSAssert1(index <= childCount, @"%@", NSInvalidArgumentException);
+  NSAssert1(nil == [child parent], @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLAttributeKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLDTDKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLDocumentKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLElementKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLInvalidKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLNamespaceKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLTextKind != theKind, @"%@", NSInvalidArgumentException);
 
   [self _insertChild: child atIndex: index];
 }

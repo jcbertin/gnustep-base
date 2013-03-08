@@ -827,7 +827,7 @@ static SEL	appSel;
       for (i = 0; i < c; i++)
 	{
 	  k[i] = (*nxtObj)(e, nxtSel);
-	  NSAssert (k[i], NSInternalInconsistencyException);
+	  NSAssert1(k[i], @"%@", NSInternalInconsistencyException);
 	}
       result = [[NSArray_class allocWithZone: NSDefaultMallocZone()]
 	initWithObjects: k count: c];

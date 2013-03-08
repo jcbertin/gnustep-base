@@ -525,7 +525,7 @@ static RunLoopEventType typeForStream(NSStream *aStream)
   else
     {
       [NSException raise: NSInvalidArgumentException
-		  format: @"Unknown event (%d) passed to _sendEvent:", event];
+		  format: @"Unknown event (%d) passed to _sendEvent:", (int)event];
     }
 }
 

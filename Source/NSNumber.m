@@ -368,7 +368,7 @@ static BOOL useSmallFloat;
 #if OBJC_SMALL_OBJECT_SHIFT == 1
 #define FORMAT @"%d"
 #else
-#define FORMAT @"%lld"
+#define FORMAT @"%ld"
 #endif
 #include "NSNumberMethods.h"
 

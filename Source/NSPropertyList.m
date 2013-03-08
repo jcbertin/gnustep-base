@@ -2898,9 +2898,9 @@ GSPropertyListMake(id obj, NSDictionary *loc, BOOL xml,
   unsigned      count;
   unsigned      pos;
 
-NSAssert(0 != counter, NSInvalidArgumentException);
+NSAssert1(0 != counter, @"%@", NSInvalidArgumentException);
   pos = *counter;
-NSAssert(pos + index_size < _length, NSInvalidArgumentException);
+NSAssert1(pos + index_size < _length, @"%@", NSInvalidArgumentException);
   index = _bytes[pos++];
   for (count = 1; count < index_size; count++)
     {
@@ -2916,21 +2916,21 @@ NSAssert(pos + index_size < _length, NSInvalidArgumentException);
   unsigned      pos;
   unsigned char c;
 
-NSAssert(0 != counter, NSInvalidArgumentException);
+NSAssert1(0 != counter, @"%@", NSInvalidArgumentException);
   pos = *counter;
-NSAssert(pos <= _length, NSInvalidArgumentException);
+NSAssert1(pos <= _length, @"%@", NSInvalidArgumentException);
   c = _bytes[pos++];
 
   if (c == 0x10)
     {
-NSAssert(pos + 1 < _length, NSInvalidArgumentException);
+NSAssert1(pos + 1 < _length, @"%@", NSInvalidArgumentException);
       count = _bytes[pos++];
       *counter = pos;
       return count;
     }
   else if (c == 0x11)
     {
-NSAssert(pos + 2 < _length, NSInvalidArgumentException);
+NSAssert1(pos + 2 < _length, @"%@", NSInvalidArgumentException);
       count = _bytes[pos++];
       count = (count << 8) + _bytes[pos++];
       *counter = pos;
@@ -2940,9 +2940,9 @@ NSAssert(pos + 2 < _length, NSInvalidArgumentException);
     {
       unsigned len = c - 0x10;
 
-NSAssert(pos + 1 < _length, NSInvalidArgumentException);
+NSAssert1(pos + 1 < _length, @"%@", NSInvalidArgumentException);
       count = _bytes[pos++];
-NSAssert(pos + count < _length, NSInvalidArgumentException);
+NSAssert1(pos + count < _length, @"%@", NSInvalidArgumentException);
       while (len-- > 0)
         {
           count = (count << 8) + _bytes[pos++];
@@ -3036,7 +3036,7 @@ NSAssert(pos + count < _length, NSInvalidArgumentException);
       // short data
       unsigned len = next - 0x40;
 
-NSAssert(counter + len <= _length, NSInvalidArgumentException);
+NSAssert1(counter + len <= _length, @"%@", NSInvalidArgumentException);
       if (mutability == NSPropertyListMutableContainersAndLeaves)
 	{
 	  result = [NSMutableData dataWithBytes: _bytes + counter
@@ -3054,7 +3054,7 @@ NSAssert(counter + len <= _length, NSInvalidArgumentException);
       unsigned long len;
 
       len = [self readCountAt: &counter];
-NSAssert(counter + len <= _length, NSInvalidArgumentException);
+NSAssert1(counter + len <= _length, @"%@", NSInvalidArgumentException);
       if (mutability == NSPropertyListMutableContainersAndLeaves)
 	{
 	  result = [NSMutableData dataWithBytes: _bytes + counter

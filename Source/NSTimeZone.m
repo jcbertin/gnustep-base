@@ -760,8 +760,8 @@ static NSMapTable	*absolutes = 0;
 	       * Should never happen now we round to the minute
 	       * for MacOS-X compatibnility.
 	       */
-	      name = [[NSString alloc] initWithFormat: @"NSAbsoluteTimeZone:%d",
-		anOffset];
+	      name = [[NSString alloc] initWithFormat: @"NSAbsoluteTimeZone:%ld",
+		(long)anOffset];
 	    }
 	}
       else
@@ -1750,7 +1750,7 @@ LOCALDBKEY, LOCALDBKEY, _time_zone_path (ZONES_DIR, nil));
 @"but abbreviations do not uniquely represent timezones, so this may\n"
 @"not have found the timezone you were expecting.  The timezone found\n"
 @"was '%@' (currently UTC%c%02d%02d)\n\n",
-localZoneString, [zone name], sign, s/3600, (s/60)%60);
+localZoneString, [zone name], sign, (int)(s/3600), (int)((s/60)%60));
 		}
 	    }
 	}
@@ -2288,10 +2288,10 @@ localZoneString, [zone name], sign, s/3600, (s/60)%60);
 
 - (NSString*) description
 {
-  return [NSString stringWithFormat: @"%@(%@, %s%d)", [self name],
+  return [NSString stringWithFormat: @"%@(%@, %s%ld)", [self name],
     [self timeZoneAbbreviation],
     ([self isDaylightSavingTimeZone]? "IS_DST, ": ""),
-    [self timeZoneSecondsFromGMT]];
+    (long)[self timeZoneSecondsFromGMT]];
 }
 
 /**

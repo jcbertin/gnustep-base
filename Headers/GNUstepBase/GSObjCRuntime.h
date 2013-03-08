@@ -449,7 +449,7 @@ GSAutoreleasedBuffer(unsigned size);
  * </p>
  */
 GS_EXPORT BOOL
-GSPrintf (FILE *fptr, NSString *format, ...);
+GSPrintf (FILE *fptr, NSString *format, ...) NS_FORMAT_FUNCTION(2,3);
 
 
 

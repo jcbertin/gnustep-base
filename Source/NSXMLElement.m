@@ -646,17 +646,17 @@ extern void ensure_oldNs(xmlNodePtr node);
   NSUInteger childCount = [self childCount];
 
   // Check to make sure this is a valid addition...
-  NSAssert(nil != child, NSInvalidArgumentException);
-  NSAssert(index <= childCount, NSInvalidArgumentException);
-  NSAssert(nil == [child parent], NSInvalidArgumentException);
-  NSAssert(NSXMLAttributeKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLDTDKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLDocumentKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLElementDeclarationKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLEntityDeclarationKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLInvalidKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLNamespaceKind != theKind, NSInvalidArgumentException);
-  NSAssert(NSXMLNotationDeclarationKind != theKind, NSInvalidArgumentException);
+  NSAssert1(nil != child, @"%@", NSInvalidArgumentException);
+  NSAssert1(index <= childCount, @"%@", NSInvalidArgumentException);
+  NSAssert1(nil == [child parent], @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLAttributeKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLDTDKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLDocumentKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLElementDeclarationKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLEntityDeclarationKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLInvalidKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLNamespaceKind != theKind, @"%@", NSInvalidArgumentException);
+  NSAssert1(NSXMLNotationDeclarationKind != theKind, @"%@", NSInvalidArgumentException);
 
   [self _insertChild: child atIndex: index];
 }
