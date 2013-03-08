@@ -373,7 +373,7 @@ GSCurrentThreadDictionary(void)
  * Callback function so send notifications on becoming multi-threaded.
  */
 static void
-gnustep_base_thread_callback(void)
+notifyBecomingMultiThreaded(void)
 {
   /*
    * Protect this function with locking ... to avoid any possibility
@@ -449,8 +449,6 @@ setThreadForCurrentThread(NSThread *t)
 #if GS_WITH_GC || __OBJC_GC__
   GSRegisterThreadWithGC();
 #endif
-  // FIXME: should we *REALLY* call this?
-  gnustep_base_thread_callback();
 }
 
 static void
@@ -488,21 +486,6 @@ unregisterActiveThread(NSThread *thread)
   NSMutableArray        *stack = GSPrivateStackAddresses();
 
   return stack;
-}
-
-+ (BOOL) _createThreadForCurrentPthread
-{
-  NSThread	*t = pthread_getspecific(thread_object_key);
-
-  if (t == nil)
-    {
-      t = [self new];
-      t->_active = YES;
-      setThreadForCurrentThread(t);
-      GS_CONSUMED(t);
-      return YES;
-    }
-  return NO;
 }
 
 + (NSThread*) currentThread
@@ -788,8 +771,8 @@ unregisterActiveThread(NSThread *thread)
  */
 static void *nsthreadLauncher(void* thread)
 {
-    NSThread *t = (NSThread*)thread;
-    setThreadForCurrentThread(t);
+  NSThread *t = (NSThread*)thread;
+  setThreadForCurrentThread(t);
 
   /*
    * Let observers know a new thread is starting.
@@ -838,7 +821,7 @@ static void *nsthreadLauncher(void* thread)
 
   /* Make sure the notification is posted BEFORE the new thread starts.
    */
-  gnustep_base_thread_callback();
+  notifyBecomingMultiThreaded();
 
   /* The thread must persist until it finishes executing.
    */
@@ -1315,7 +1298,24 @@ GSRunLoopInfoForThread(NSThread *aThread)
 BOOL
 GSRegisterCurrentThread (void)
 {
-  return [NSThread _createThreadForCurrentPthread];
+  NSThread	*t = pthread_getspecific(thread_object_key);
+
+  if (t == nil)
+    {
+      t = [NSThread new];
+      t->_active = YES;
+      setThreadForCurrentThread(t);
+      GS_CONSUMED(t);
+      /* Don't send notification when registering main thread.
+       * Otherwise Bad Things(tm) will happen.
+       */
+      if (!IS_MAIN_PTHREAD)
+	{
+	  notifyBecomingMultiThreaded();
+	}
+      return YES;
+    }
+  return NO;
 }
 
 /**
