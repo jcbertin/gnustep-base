@@ -315,6 +315,13 @@ static pthread_key_t thread_object_key;
  */
 static void exitedThread(void *thread)
 {
+#if GS_HAVE_LIBDISPATCH_COMPAT
+  if (((NSThread*)thread)->_isDispatchWorkerThread)
+    {
+      GSUnregisterCurrentThread();
+      return;
+    }
+#endif
   if (thread != defaultThread)
     {
       fprintf(stderr, "WARNING thread %p terminated without calling +exit!\n",

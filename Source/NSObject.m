@@ -1150,6 +1150,10 @@ static id gs_weak_load(id obj)
       /* Make sure that default thread is correctly set up. */
       GSCurrentThread();
 
+#if GS_HAVE_LIBDISPATCH_COMPAT
+      GSPrivateDispatchInitialize();
+#endif
+
       /* Now that we have a workign autorelease system and working string
        * classes we are able to set up notifications.
        */

@@ -81,6 +81,9 @@ extern "C" {
    */
   @private id _internal GS_UNUSED_IVAR;
 #endif
+#if GS_HAVE_LIBDISPATCH_COMPAT
+  BOOL			_isDispatchWorkerThread;
+#endif
 }
 
 /**

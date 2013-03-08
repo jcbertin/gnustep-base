@@ -823,3 +823,38 @@ pop_pool_from_cache (struct autorelease_thread_vars *tv)
 
 @end
 #endif // !GS_WITH_GC
+
+# if GS_HAVE_LIBDISPATCH_COMPAT
+void*
+GSPrivateAutoreleasePoolAllocate(void)
+{
+  /* Make sure that GNUstep runtime is correctly set up
+   * for the current dispatch worker thread.
+   */
+  if (GSRegisterCurrentThread())
+    {
+      NSThread* t = [NSThread currentThread];
+      t->_isDispatchWorkerThread = YES;
+    }
+
+#ifdef ARC_RUNTIME
+  return NULL;
+#else
+  return [NSAutoreleasePool new];
+#endif
+}
+
+#ifdef ARC_RUNTIME
+#define ARC_UNUSED __attribute__((unused))
+#else
+#define ARC_UNUSED
+#endif
+void
+GSPrivateAutoreleasePoolDeallocate(void* param ARC_UNUSED)
+{
+#ifndef ARC_RUNTIME
+  NSAutoreleasePool *pool = param;
+  [pool drain];
+#endif
+}
+# endif /* GS_HAVE_LIBDISPATCH_COMPAT */

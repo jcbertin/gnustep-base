@@ -30,6 +30,10 @@
 
 #import "GSPrivate.h"
 
+#if GS_HAVE_LIBDISPATCH_COMPAT
+#import <dlfcn.h>
+#endif
+
 /*
  PENDING some string constants are scattered about in the class impl
          files and should be moved here
@@ -299,6 +303,22 @@ GSPrivateBuildStrings()
     }
 }
 
+#if GS_HAVE_LIBDISPATCH_COMPAT
+void
+GSPrivateDispatchInitialize(void)
+{
+  void** _dispatch_begin_NSAutoReleasePool = dlsym(RTLD_DEFAULT, "_dispatch_begin_NSAutoReleasePool");
+  if (NULL != _dispatch_begin_NSAutoReleasePool)
+    {
+      void** _dispatch_end_NSAutoReleasePool = dlsym(RTLD_DEFAULT, "_dispatch_end_NSAutoReleasePool");
+      if (NULL != _dispatch_end_NSAutoReleasePool)
+        {
+          *_dispatch_begin_NSAutoReleasePool = (void*)GSPrivateAutoreleasePoolAllocate;
+          *_dispatch_end_NSAutoReleasePool = (void*)GSPrivateAutoreleasePoolDeallocate;
+        }
+    }
+}
+#endif /* GS_HAVE_LIBDISPATCH_COMPAT */
 
 
 /* For bug in gcc 3.1. See NSByteOrder.h */
