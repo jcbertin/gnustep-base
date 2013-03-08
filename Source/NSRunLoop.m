@@ -1259,8 +1259,16 @@ updateTimer(NSTimer *t, NSDate *d, NSTimeInterval now)
 {
   NSAutoreleasePool	*arp = [NSAutoreleasePool new];
   NSDate		*d;
+  GSRunLoopCtxt		*context;
+  unsigned int		inputCount;
 
   NSAssert1(mode != nil, @"%@", NSInvalidArgumentException);
+  context = NSMapGet(_contextMap, mode);
+  if (context == nil)
+    {
+      [arp drain];
+      return NO;
+    }
 
   /* Find out how long we can wait before first limit date. */
   d = [self limitDateForMode: mode];
@@ -1284,9 +1292,23 @@ updateTimer(NSTimer *t, NSDate *d, NSTimeInterval now)
   /* Wait, listening to our input sources. */
   [self acceptInputForMode: mode beforeDate: d];
 
+  inputCount = GSIArrayCount(context->watchers);
+#if GS_HAVE_LIBDISPATCH_COMPAT
+  if (GSIsMainThread() && inputCount == 1)
+    {
+      id dispatchWatcher = [GSDispatchWatcher sharedInstance];
+      id lastWatcher = GSIArrayItemAtIndex(context->watchers, 0).obj;
+      if (lastWatcher == dispatchWatcher)
+	{
+	  inputCount --;
+	}
+    }
+#endif
+  inputCount += GSIArrayCount(context->timers);
+
   [d release];
   [arp drain];
-  return YES;
+  return (inputCount == 0) ? NO : YES;
 }
 
 /**
