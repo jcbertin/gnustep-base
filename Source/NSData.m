@@ -141,7 +141,7 @@ static SEL	appendSel;
 static IMP	appendImp;
 
 static BOOL
-readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
+readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone, NSError** errorPtr)
 {
 #if defined(__MINGW__)
   const unichar	*thePath;
@@ -150,9 +150,15 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
 #endif	
   FILE		*theFile = 0;
   void		*tmp = 0;
-  int		c;
+  long		c;
   long		fileLength;
-	
+  NSError	*error = nil;
+
+  if (errorPtr)
+    {
+      *errorPtr = nil;
+    }
+
   NS_DURING
 #if defined(__MINGW__)
     thePath = (const unichar*)[path fileSystemRepresentation];
@@ -166,6 +172,11 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
   if (thePath == 0)
     {
       NSWarnFLog(@"Open (%@) attempt failed - bad path", path);
+      if (errorPtr)
+	{
+	  /* FIXME: find a better error */
+	  *errorPtr = [NSError _systemError:EINVAL];
+	}
       return NO;
     }
 	
@@ -177,7 +188,8 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
 
   if (theFile == 0)		/* We failed to open the file. */
     {
-      NSDebugFLog(@"Open (%@) attempt failed - %@", path, [NSError _last]);
+      error = [NSError _last];
+      NSDebugFLog(@"Open (%@) attempt failed - %@", path, error);
       goto failure;
     }
 
@@ -191,8 +203,8 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
   c = fseek(theFile, 0L, SEEK_END);
   if (c != 0)
     {
-      NSWarnFLog(@"Seek to end of file (%@) failed - %@", path,
-	[NSError _last]);
+      error = [NSError _last];
+      NSWarnFLog(@"Seek to end of file (%@) failed - %@", path, error);
       goto failure;
     }
 	
@@ -203,7 +215,8 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
   fileLength = ftell(theFile);
   if (fileLength == -1)
     {
-      NSWarnFLog(@"Ftell on %@ failed - %@", path, [NSError _last]);
+      error = [NSError _last];
+      NSWarnFLog(@"Ftell on %@ failed - %@", path, error);
       goto failure;
     }
 	
@@ -214,8 +227,8 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
   c = fseek(theFile, 0L, SEEK_SET);
   if (c != 0)
     {
-      NSWarnFLog(@"Fseek to start of file (%@) failed - %@", path,
-	[NSError _last]);
+      error = [NSError _last];
+      NSWarnFLog(@"Fseek to start of file (%@) failed - %@", path, error);
       goto failure;
     }
 
@@ -252,8 +265,9 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
 #endif
 	  if (tmp == 0)
 	    {
+	      error = [NSError _systemError:ENOMEM];
 	      NSLog(@"Malloc failed for file (%@) of length %ld - %@", path,
-		fileLength + c, [NSError _last]);
+		    fileLength + c, error);
 	      goto failure;
 	    }
 	  memcpy(tmp + fileLength, buf, c);
@@ -271,8 +285,9 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
 #endif
       if (tmp == 0)
 	{
+	  error = [NSError _systemError:ENOMEM];
 	  NSLog(@"Malloc failed for file (%@) of length %ld - %@", path,
-	    fileLength, [NSError _last]);
+	    fileLength, error);
 	  goto failure;
 	}
 	    
@@ -293,8 +308,8 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
     }
   if (ferror(theFile))
     {
-      NSWarnFLog(@"read of file (%@) contents failed - %@", path,
-        [NSError _last]);
+      error = [NSError _last];
+      NSWarnFLog(@"read of file (%@) contents failed - %@", path, error);
       goto failure;
     }
 
@@ -307,6 +322,11 @@ readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
    *	Just in case the failure action needs to be changed.
    */
 failure:
+  if (errorPtr)
+    {
+      *errorPtr = error;
+    }
+
 #if	!GS_WITH_GC
   if (tmp != 0)
     {
@@ -363,6 +383,8 @@ failure:
 
 #ifdef	HAVE_MMAP
 @interface	NSDataMappedFile : NSDataMalloc
+- (id) _initWithContentsOfMappedFile: (NSString*)path
+                               error: (NSError**)errorPtr;
 @end
 #endif
 
@@ -497,33 +519,52 @@ failure:
 
 /**
  * Returns a data object encapsulating the contents of the specified file.
- * Invokes -initWithContentsOfFile:
+ * Invokes -initWithContentsOfFile:options:error:
  */
 + (id) dataWithContentsOfFile: (NSString*)path
 {
   NSData	*d;
 
   d = [dataMalloc allocWithZone: NSDefaultMallocZone()];
-  d = [d initWithContentsOfFile: path];
+  d = [d initWithContentsOfFile: path
+			options: 0
+			  error: 0];
   return AUTORELEASE(d);
 }
 
 /**
  * Returns a data object encapsulating the contents of the specified
  * file mapped directly into memory.
- * Invokes -initWithContentsOfMappedFile:
+ * Invokes -initWithContentsOfFile:options:error:
  */
 + (id) dataWithContentsOfMappedFile: (NSString*)path
 {
   NSData	*d;
 
-#ifdef	HAVE_MMAP
-  d = [NSDataMappedFile allocWithZone: NSDefaultMallocZone()];
-  d = [d initWithContentsOfMappedFile: path];
-#else
   d = [dataMalloc allocWithZone: NSDefaultMallocZone()];
-  d = [d initWithContentsOfMappedFile: path];
-#endif
+  d = [d initWithContentsOfFile: path
+			options: NSMappedRead
+			  error: 0];
+  return AUTORELEASE(d);
+}
+
+/**
+ * Returns a data object encapsulating the contents of the specified
+ * file. Contents may be mapped directly into memory if options mask
+ * contains NSMappedRead.
+ * Returns NSError object in case of failure.
+ * Invokes -initWithContentsOfFile:options:error:
+ */
++ (id) dataWithContentsOfFile: (NSString *)path
+		      options: (NSUInteger)mask
+			error: (NSError **)errorPtr
+{
+  NSData	*d;
+
+  d = [dataMalloc allocWithZone: NSDefaultMallocZone()];
+  d = [d initWithContentsOfFile: path
+			options: mask
+			  error: errorPtr];
   return AUTORELEASE(d);
 }
 
@@ -537,6 +578,24 @@ failure:
 
   d = [url resourceDataUsingCache: YES];
   return d;
+}
+
+/**
+ * Retrieves the information at the specified url and returns an NSData
+ * instance encapsulating it.
+ * Invokes -initWithContentsOfURL:options:error:
+ */
++ (id) dataWithContentsOfURL: (NSURL *)url
+		     options: (NSUInteger)mask
+		       error: (NSError **)errorPtr
+{
+  NSData	*d;
+
+  d = [dataMalloc allocWithZone: NSDefaultMallocZone()];
+  d = [d initWithContentsOfURL: url
+		       options: mask
+			 error: errorPtr];
+  return AUTORELEASE(d);
 }
 
 /**
@@ -637,16 +696,57 @@ failure:
  */
 - (id) initWithContentsOfFile: (NSString*)path
 {
+  return [self initWithContentsOfFile: path
+			      options: 0
+				error: 0];
+}
+
+/**
+ *  Initialize with data pointing to contents of file at path.  Bytes are
+ *  only "swapped in" as needed.  File should not be moved or deleted for
+ *  the life of this object.
+ */
+- (id) initWithContentsOfMappedFile: (NSString *)path
+{
+  return [self initWithContentsOfFile: path
+			      options: NSMappedRead
+				error: 0];
+}
+
+/**
+ * Initializes a data object encapsulating the contents of the specified
+ * file. Contents may be mapped directly into memory if options mask
+ * contains NSMappedRead.
+ * Returns NSError object in case of failure.
+ */
+- (id) initWithContentsOfFile: (NSString *)path
+		      options: (NSUInteger)mask
+			error: (NSError **)errorPtr
+{
   void		*fileBytes;
   long          fileLength;
 
+  /* FIXME: handle NSUncachedRead case */
+#ifdef	HAVE_MMAP
+  if (mask & NSMappedRead)
+    {
+      NSZone	*z = [self zone];
+      DESTROY(self);
+      self = [NSDataMappedFile allocWithZone: z];
+      return [(NSDataMappedFile*)self _initWithContentsOfMappedFile: path
+                                                              error: errorPtr];
+    }
+#endif
+
 #if	GS_WITH_GC
-  if (readContentsOfFile(path, &fileBytes, &fileLength, 0) == NO)
+  if (readContentsOfFile(path, &fileBytes, &fileLength,
+			 0, errorPtr) == NO)
     {
       return nil;
     }
 #else
-  if (readContentsOfFile(path, &fileBytes, &fileLength, [self zone]) == NO)
+  if (readContentsOfFile(path, &fileBytes, &fileLength,
+			 [self zone], errorPtr) == NO)
     {
       DESTROY(self);
       return nil;
@@ -659,31 +759,41 @@ failure:
 }
 
 /**
- *  Initialize with data pointing to contents of file at path.  Bytes are
- *  only "swapped in" as needed.  File should not be moved or deleted for
- *  the life of this object.
- */
-- (id) initWithContentsOfMappedFile: (NSString *)path
-{
-#ifdef	HAVE_MMAP
-  NSZone	*z = [self zone];
-  DESTROY(self);
-  self = [NSDataMappedFile allocWithZone: z];
-  return [self initWithContentsOfMappedFile: path];
-#else
-  return [self initWithContentsOfFile: path];
-#endif
-}
-
-/**
- *  Initialize with data pointing to contents of URL, which will be
- *  retrieved immediately in a blocking manner.
+ * Initialize with data pointing to contents of URL, which will be
+ * retrieved immediately in a blocking manner.
  */
 - (id) initWithContentsOfURL: (NSURL*)url
 {
   NSData	*data = [url resourceDataUsingCache: YES];
 
   return [self initWithData: data];
+}
+
+/**
+ * Initialize with data pointing to contents of URL.
+ * Invokes initWithContentsOfFile:options:error: if URL
+ * is a file URL.
+ */
+- (id) initWithContentsOfURL: (NSURL *)url
+		     options: (NSUInteger)mask
+		       error: (NSError **)errorPtr
+{
+  if ([url isFileURL] == YES)
+    {
+      self = [self initWithContentsOfFile: [url path]
+				  options: mask
+				    error: errorPtr];
+    }
+  else
+    {
+      if (errorPtr)
+	{
+	  *errorPtr = nil;
+	}
+
+      self = [self initWithContentsOfURL: url];
+    }
+  return self;
 }
 
 /**
@@ -1843,7 +1953,9 @@ failure:
   NSMutableData	*d;
 
   d = [mutableDataMalloc allocWithZone: NSDefaultMallocZone()];
-  d = [d initWithContentsOfFile: path];
+  d = [d initWithContentsOfFile: path
+			options: 0
+			  error: 0];
   return AUTORELEASE(d);
 }
 
@@ -1852,7 +1964,22 @@ failure:
   NSMutableData	*d;
 
   d = [mutableDataMalloc allocWithZone: NSDefaultMallocZone()];
-  d = [d initWithContentsOfMappedFile: path];
+  d = [d initWithContentsOfFile: path
+			options: NSMappedRead
+			  error: 0];
+  return AUTORELEASE(d);
+}
+
++ (id) dataWithContentsOfFile: (NSString *)path
+		      options: (NSUInteger)mask
+			error: (NSError **)errorPtr
+{
+  NSMutableData	*d;
+
+  d = [mutableDataMalloc allocWithZone: NSDefaultMallocZone()];
+  d = [d initWithContentsOfFile: path
+			options: mask
+			  error: errorPtr];
   return AUTORELEASE(d);
 }
 
@@ -3044,17 +3171,25 @@ getBytes(void* dst, void* src, unsigned len, unsigned limit, unsigned *pos)
  *  Initialize with data pointing to contents of file at path.  Bytes are
  *  only "swapped in" as needed.  File should not be moved or deleted for
  *  the life of this object.
+ *  Returns NSError object in case of failure.
  */
-- (id) initWithContentsOfMappedFile: (NSString*)path
+- (id) _initWithContentsOfMappedFile: (NSString*)path
+                               error: (NSError**)errorPtr
 {
   off_t		off;
   int		fd;
+  NSError	*error = nil;
 	
 #if defined(__MINGW__)
   const unichar	*thePath;
 #else
   const char	*thePath;
 #endif
+
+  if (errorPtr)
+    {
+      *errorPtr = nil;
+    }
 
   NS_DURING
 #if defined(__MINGW__)
@@ -3070,6 +3205,11 @@ getBytes(void* dst, void* src, unsigned len, unsigned limit, unsigned *pos)
     {
       NSWarnMLog(@"Open (%@) attempt failed - bad path", path);
       DESTROY(self);
+      if (errorPtr)
+	{
+	  /* FIXME: find a better error */
+	  *errorPtr = [NSError _systemError:EINVAL];
+	}
       return nil;
     }
 
@@ -3080,39 +3220,54 @@ getBytes(void* dst, void* src, unsigned len, unsigned limit, unsigned *pos)
 #endif
   if (fd < 0)
     {
-      NSWarnMLog(@"unable to open %@ - %@", path, [NSError _last]);
-      DESTROY(self);
-      return nil;
+      error = [NSError _last];
+      NSWarnMLog(@"unable to open %@ - %@", path, error);
+      goto failure;
     }
   /* Find size of file to be mapped. */
   off = lseek(fd, 0, SEEK_END);
   if (off < 0)
     {
-      NSWarnMLog(@"unable to seek to eof %@ - %@", path, [NSError _last]);
-      close(fd);
-      DESTROY(self);
-      return nil;
+      error = [NSError _last];
+      NSWarnMLog(@"unable to seek to eof %@ - %@", path, error);
+      goto failure;
     }
   length = off;
   /* Position at start of file. */
   if (lseek(fd, 0, SEEK_SET) != 0)
     {
-      NSWarnMLog(@"unable to seek to sof %@ - %@", path, [NSError _last]);
-      close(fd);
-      DESTROY(self);
-      return nil;
+      error = [NSError _last];
+      NSWarnMLog(@"unable to seek to sof %@ - %@", path, error);
+      goto failure;
     }
   bytes = mmap(0, length, PROT_READ, MAP_SHARED, fd, 0);
   if (bytes == MAP_FAILED)
     {
+      /* Fall back to default implementation */
       NSWarnMLog(@"mapping failed for %@ - %@", path, [NSError _last]);
-      close(fd);
+      NSZone	*z = [self zone];
       DESTROY(self);
-      self = [dataMalloc allocWithZone: NSDefaultMallocZone()];
-      self = [self initWithContentsOfFile: path];
+      self = [dataMalloc allocWithZone: z];
+      self = [self initWithContentsOfFile: path
+				  options: 0
+				    error: errorPtr];
     }
   close(fd);
   return self;
+
+failure:
+  if (errorPtr)
+    {
+      *errorPtr = error;
+    }
+
+  if (fd >= 0)
+    {
+      close(fd);
+    }
+
+  DESTROY(self);
+  return nil;
 }
 
 @end
@@ -3385,7 +3540,28 @@ getBytes(void* dst, void* src, unsigned len, unsigned limit, unsigned *pos)
 
 - (id) initWithContentsOfMappedFile: (NSString *)path
 {
-  return [self initWithContentsOfFile: path];
+  return [self initWithContentsOfFile: path
+			      options: 0
+				error: 0];
+}
+
+- (id) initWithContentsOfFile: (NSString *)path
+		      options: (NSUInteger)mask
+			error: (NSError **)errorPtr
+{
+  return [self initWithContentsOfFile: path
+			      options: (mask & ~NSMappedRead)
+				error: errorPtr];
+
+}
+
+- (id) initWithContentsOfURL: (NSURL *)url
+		     options: (NSUInteger)mask
+		       error: (NSError **)errorPtr
+{
+  return [self initWithContentsOfURL: url
+			     options: (mask & ~NSMappedRead)
+			       error: errorPtr];
 }
 
 - (void) appendBytes: (const void*)aBuffer

@@ -162,6 +162,27 @@ enum {
 - (BOOL) writeToURL: (NSURL *)url
             options: (NSUInteger)writeOptionsMask
               error: (NSError **)errorPtr;
+
+/**
+ * Creates and return a data object by reading every byte from file.
+ */
++ (id) dataWithContentsOfFile: (NSString *)path
+		      options: (NSUInteger)mask
+			error: (NSError **)errorPtr;
+/**
+ * Creates and return a data object containing the data from the URL.
+ */
++ (id) dataWithContentsOfURL: (NSURL *)url
+		     options: (NSUInteger)mask
+		       error: (NSError **)errorPtr;
+
+- (id) initWithContentsOfFile: (NSString *)path
+		      options: (NSUInteger)mask
+			error: (NSError **)errorPtr;
+- (id) initWithContentsOfURL: (NSURL *)url
+		     options: (NSUInteger)mask
+		       error: (NSError **)errorPtr;
+
 #endif
 @end
 
