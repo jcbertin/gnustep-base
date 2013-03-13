@@ -144,20 +144,25 @@ static BOOL
 readContentsOfFile(NSString* path, void** buf, long* len, NSZone* zone)
 {
 #if defined(__MINGW__)
-  const unichar	*thePath = 0;
+  const unichar	*thePath;
 #else
-  const char	*thePath = 0;
+  const char	*thePath;
 #endif	
   FILE		*theFile = 0;
   void		*tmp = 0;
   int		c;
   long		fileLength;
 	
+  NS_DURING
 #if defined(__MINGW__)
-  thePath = (const unichar*)[path fileSystemRepresentation];
+    thePath = (const unichar*)[path fileSystemRepresentation];
 #else
-  thePath = [path fileSystemRepresentation];
+    thePath = [path fileSystemRepresentation];
 #endif	
+  NS_HANDLER
+    thePath = 0;
+  NS_ENDHANDLER
+
   if (thePath == 0)
     {
       NSWarnFLog(@"Open (%@) attempt failed - bad path", path);
@@ -1307,42 +1312,62 @@ failure:
                error: (NSError **)errorPtr
 {
 #if defined(__MINGW__)
-  NSUInteger	length = [path length];
-  unichar	wthePath[length + 100];
-  unichar	wtheRealPath[length + 100];
+  const unichar	*theRealPath;
+  unichar	*thePath;
 #else
-  char		thePath[BUFSIZ*2+8];
-  char		theRealPath[BUFSIZ*2];
+  const char	*theRealPath;
+  char		*thePath;
 #endif
-  int		c;
+  size_t	c;
+  size_t	l;
   FILE		*theFile;
   BOOL		useAuxiliaryFile = NO;
-  BOOL		error_BadPath = YES;
+  NSError	*error = nil;
 
   if (writeOptionsMask & NSAtomicWrite)
     {
       useAuxiliaryFile = YES;
     }
-#if defined(__MINGW__)
-  [path getCharacters: wtheRealPath];
-  wtheRealPath[length] = L'\0';
-  error_BadPath = (length <= 0);
-#else
-  if ([path canBeConvertedToEncoding: [NSString defaultCStringEncoding]])
-    {	
-      const char *local_c_path = [path cString];
 
-      if (local_c_path != 0 && strlen(local_c_path) < (BUFSIZ*2))
-	{	
-	  strncpy(theRealPath, local_c_path, sizeof(theRealPath) - 1);
-	  theRealPath[sizeof(theRealPath) - 1] = '\0';
-	  error_BadPath = NO;
-	}	
-    }
-#endif
-  if (error_BadPath)
+  if (errorPtr)
     {
-      NSWarnMLog(@"Open (%@) attempt failed - bad path",path);
+      *errorPtr = nil;
+    }
+
+  NS_DURING
+#if defined(__MINGW__)
+    theRealPath = (const unichar*)[path fileSystemRepresentation];
+#else
+    theRealPath = [path fileSystemRepresentation];
+#endif	
+  NS_HANDLER
+    theRealPath = 0;
+  NS_ENDHANDLER
+
+  if (theRealPath == 0)
+    {
+      NSWarnFLog(@"Open (%@) attempt failed - bad path", path);
+      if (errorPtr)
+	{
+	  /* FIXME: find a better error */
+	  *errorPtr = [NSError _systemError:EINVAL];
+	}
+      return NO;
+    }
+
+#if defined(__MINGW__)
+  thePath = malloc(sizeof(unichar) * (wcslen(theRealPath) + 7));
+#else
+  thePath = malloc(sizeof(char) * (strlen(theRealPath) + 7));
+#endif
+
+  if (thePath == 0)
+    {
+      NSWarnFLog(@"Open (%@) attempt failed - malloc failed", path);
+      if (errorPtr)
+	{
+	  *errorPtr = [NSError _systemError:ENOMEM];
+	}
       return NO;
     }
 
@@ -1352,12 +1377,12 @@ failure:
       int	desc;
       int	mask;
 
-      strncpy(thePath, theRealPath, sizeof(thePath) - 1);
-      thePath[sizeof(thePath) - 1] = '\0';
-      strncat(thePath, "XXXXXX", 6);
+      strcpy(thePath, theRealPath);
+      strcat(thePath, "XXXXXX");
       if ((desc = mkstemp(thePath)) < 0)
 	{
-          NSWarnMLog(@"mkstemp (%s) failed - %@", thePath, [NSError _last]);
+	  error = [NSError _last];
+          NSWarnMLog(@"mkstemp (%s) failed - %@", thePath, error);
           goto failure;
 	}
       mask = umask(0);
@@ -1365,13 +1390,15 @@ failure:
       fchmod(desc, 0644 & ~mask);
       if ((theFile = fdopen(desc, "w")) == 0)
 	{
+	  error = [NSError _last];
+          NSWarnMLog(@"fdopen (%s) failed - %@", thePath, error);
 	  close(desc);
+          goto failure;
 	}
     }
   else
     {
-      strncpy(thePath, theRealPath, sizeof(thePath) - 1);
-      thePath[sizeof(thePath) - 1] = '\0';
+      strcpy(thePath, theRealPath);
       theFile = fopen(thePath, "wb");
     }
 #else
@@ -1381,22 +1408,23 @@ failure:
        * mktemp() call so that we can be sure that both files are on
        * the same filesystem and the subsequent rename() will work. */
 #if defined(__MINGW__)
-      wcscpy(wthePath, wtheRealPath);
-      wcscat(wthePath, L"XXXXXX");
-      if (_wmktemp(wthePath) == 0)
+      wcscpy(thePath, theRealPath);
+      wcscat(thePath, L"XXXXXX");
+      if (_wmktemp(thePath) == 0)
 	{
+	  error = [NSError _last];
 	  NSWarnMLog(@"mktemp (%@) failed - %@",
-	  [NSString stringWithCharacters: wthePath length: wcslen(wthePath)],
-	    [NSError _last]);
+	  [NSString stringWithCharacters: thePath length: wcslen(thePath)],
+	    error);
 	  goto failure;
 	}
 #else
-      strncpy(thePath, theRealPath, sizeof(thePath) - 1);
-      thePath[sizeof(thePath) - 1] = '\0';
-      strncat(thePath, "XXXXXX", 6);
+      strcpy(thePath, theRealPath);
+      strcat(thePath, "XXXXXX");
       if (mktemp(thePath) == 0)
 	{
-          NSWarnMLog(@"mktemp (%s) failed - %@", thePath, [NSError _last]);
+	  error = [NSError _last];
+          NSWarnMLog(@"mktemp (%s) failed - %@", thePath, error);
           goto failure;
 	}
 #endif
@@ -1404,16 +1432,15 @@ failure:
   else
     {
 #if defined(__MINGW__)
-      wcscpy(wthePath,wtheRealPath);
+      wcscpy(thePath, theRealPath);
 #else
-      strncpy(thePath, theRealPath, sizeof(thePath) - 1);
-      thePath[sizeof(thePath) - 1] = '\0';
+      strcpy(thePath, theRealPath);
 #endif
     }
 
   /* Open the file (whether temp or real) for writing. */
 #if defined(__MINGW__)
-  theFile = _wfopen(wthePath, L"wb");
+  theFile = _wfopen(thePath, L"wb");
 #else
   theFile = fopen(thePath, "wb");
 #endif
@@ -1423,12 +1450,13 @@ failure:
     {
       /* Something went wrong; we weren't
        * even able to open the file. */
+      error = [NSError _last];
 #if defined(__MINGW__)
-      NSWarnMLog(@"Open (%@) failed - %@",
-	[NSString stringWithCharacters: wthePath length: wcslen(wthePath)],
-	  [NSError _last]);
+      NSWarnMLog(@"fopen (%@) failed - %@",
+	[NSString stringWithCharacters: thePath length: wcslen(thePath)],
+	  error);
 #else
-      NSWarnMLog(@"Open (%s) failed - %@", thePath, [NSError _last]);
+      NSWarnMLog(@"fopen (%s) failed - %@", thePath, error);
 #endif
       goto failure;
     }
@@ -1436,34 +1464,35 @@ failure:
   /* Now we try and write the NSData's bytes to the file.  Here `c' is
    * the number of bytes which were successfully written to the file
    * in the fwrite() call. */
-  c = fwrite([self bytes], sizeof(char), [self length], theFile);
+  l = [self length];
+  c = fwrite([self bytes], 1, l, theFile);
 
-  if (c < (int)[self length])        /* We failed to write everything for
-                                 * some reason. */
+  if (c != l)                   /* We failed to write everything for
+				 * some reason. */
     {
+      error = [NSError _last];
 #if defined(__MINGW__)
-      NSWarnMLog(@"Fwrite (%@) failed - %@",
-	[NSString stringWithCharacters: wthePath length: wcslen(wthePath)],
-	[NSError _last]);
+      NSWarnMLog(@"fwrite (%@) failed - %@",
+	[NSString stringWithCharacters: thePath length: wcslen(thePath)],
+	error);
 #else
-      NSWarnMLog(@"Fwrite (%s) failed - %@", thePath, [NSError _last]);
+      NSWarnMLog(@"fwrite (%s) failed - %@", thePath, error);
 #endif
       goto failure;
     }
 
   /* We're done, so close everything up. */
-  c = fclose(theFile);
-
-  if (c != 0)                   /* I can't imagine what went wrong
+  if (fclose(theFile) != 0)     /* I can't imagine what went wrong
                                  * closing the file, but we got here,
                                  * so we need to deal with it. */
     {
+      error = [NSError _last];
 #if defined(__MINGW__)
-      NSWarnMLog(@"Fclose (%@) failed - %@",
-	[NSString stringWithCharacters: wthePath length: wcslen(wthePath)],
-	[NSError _last]);
+      NSWarnMLog(@"fclose (%@) failed - %@",
+	[NSString stringWithCharacters: thePath length: wcslen(thePath)],
+	error);
 #else
-      NSWarnMLog(@"Fclose (%s) failed - %@", thePath, [NSError _last]);
+      NSWarnMLog(@"fclose (%s) failed - %@", thePath, error);
 #endif
       goto failure;
     }
@@ -1503,68 +1532,69 @@ failure:
        */
 #if 0
       if (ReplaceFile(theRealPath, thePath, 0,
-	REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0) != 0)
+	REPLACEFILE_IGNORE_MERGE_ERRORS, 0, 0) == 0)
 	{
-	  c = 0;
-	}
-      else
-	{
-	  c = -1;
+	  error = [NSError _last];
 	}
 #else
-      if (MoveFileExW(wthePath, wtheRealPath, MOVEFILE_REPLACE_EXISTING) != 0)
+      if (MoveFileExW(thePath, theRealPath, MOVEFILE_REPLACE_EXISTING) == 0)
 	{
-	  c = 0;
-	}
-	/* Windows 9x does not support MoveFileEx */
-      else if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-	{
-	  unichar	secondaryFile[length + 100];
-
-	  wcscpy(secondaryFile, wthePath);
-	  wcscat(secondaryFile, L"-delete");
-	  // Delete the intermediate name just in case
-	  DeleteFileW(secondaryFile);
-	  // Move the existing file to the temp name
-	  if (MoveFileW(wtheRealPath, secondaryFile) != 0)
+	  /* Windows 9x does not support MoveFileEx */
+	  if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
 	    {
-	      if (MoveFileW(wthePath, wtheRealPath) != 0)
+	      unichar	secondaryFile[length + 100];
+
+	      wcscpy(secondaryFile, thePath);
+	      wcscat(secondaryFile, L"-delete");
+	      // Delete the intermediate name just in case
+	      DeleteFileW(secondaryFile);
+	      // Move the existing file to the temp name
+	      if (MoveFileW(theRealPath, secondaryFile) != 0)
 		{
-		  c = 0;
-		  // Delete the old file if possible
-		  DeleteFileW(secondaryFile);	
+		  if (MoveFileW(thePath, theRealPath) != 0)
+		    {
+		      // Delete the old file if possible
+		      DeleteFileW(secondaryFile);	
+		    }
+		  else
+		    {
+		      // failure, restore the old file if possible
+		      error = [NSError _last];
+		      MoveFileW(secondaryFile, theRealPath);
+		    }
 		}
 	      else
 		{
-		  c = -1; // failure, restore the old file if possible
-		  MoveFileW(secondaryFile, wtheRealPath);
+		  // failure
+		  error = [NSError _last];
 		}
 	    }
 	  else
 	    {
-	      c = -1; // failure
+	      // failure
+	      error = [NSError _last];
 	    }
-	}
-      else
-	{
-	  c = -1;
 	}
 #endif
 #else
-      c = rename(thePath, theRealPath);
+      if (rename(thePath, theRealPath) != 0)               
+	{
+	  /* Many things could go wrong, I guess. */
+	  error = [NSError _last];
+	}
 #endif
-      if (c != 0)               /* Many things could go wrong, I guess. */
+      if (error != 0)
         {
 #if defined(__MINGW__)
           NSWarnMLog(@"Rename ('%@' to '%@') failed - %@",
-	    [NSString stringWithCharacters: wthePath
-				    length: wcslen(wthePath)],
-	    [NSString stringWithCharacters: wtheRealPath
-				    length: wcslen(wtheRealPath)],
-	    [NSError _last]);
+	    [NSString stringWithCharacters: thePath
+				    length: wcslen(thePath)],
+	    [NSString stringWithCharacters: theRealPath
+				    length: wcslen(theRealPath)],
+	    error);
 #else
 	  NSWarnMLog(@"Rename ('%s' to '%s') failed - %@",
-	    thePath, theRealPath, [NSError _last]);
+	    thePath, theRealPath, error);
 #endif
           goto failure;
         }
@@ -1602,21 +1632,28 @@ failure:
     }
 
   /* success: */
+  free(thePath);
   return YES;
 
   /* Just in case the failure action needs to be changed. */
 failure:
+  if (errorPtr)
+    {
+      *errorPtr = error;
+    }
+
   /*
    * Attempt to tidy up by removing temporary file on failure.
    */
   if (useAuxiliaryFile)
     {
 #if defined(__MINGW__)
-      _wunlink(wthePath);
+      _wunlink(thePath);
 #else
       unlink(thePath);
 #endif
     }
+  free(thePath);
   return NO;
 }
 
@@ -3014,10 +3051,20 @@ getBytes(void* dst, void* src, unsigned len, unsigned limit, unsigned *pos)
   int		fd;
 	
 #if defined(__MINGW__)
-  const unichar	*thePath = (const unichar*)[path fileSystemRepresentation];
+  const unichar	*thePath;
 #else
-  const char	*thePath = [path fileSystemRepresentation];
+  const char	*thePath;
 #endif
+
+  NS_DURING
+#if defined(__MINGW__)
+    thePath = (const unichar*)[path fileSystemRepresentation];
+#else
+    thePath = [path fileSystemRepresentation];
+#endif	
+  NS_HANDLER
+    thePath = 0;
+  NS_ENDHANDLER
 
   if (thePath == 0)	
     {
